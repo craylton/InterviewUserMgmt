@@ -20,7 +20,24 @@ public class UserServiceTests
         result.Should().BeSameAs(users);
     }
 
-    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void FilterByActive_WhenFilteringByActiveState_MustReturnOnlyUsersMatchingActiveState(bool isActive)
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var service = CreateService();
+        var users = SetupUsers();
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = service.FilterByActive(isActive);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().HaveCount(1);
+        result.Should().OnlyContain(u => u.IsActive == isActive);
+    }
+
+    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com")
     {
         var users = new[]
         {
@@ -29,7 +46,14 @@ public class UserServiceTests
                 Forename = forename,
                 Surname = surname,
                 Email = email,
-                IsActive = isActive
+                IsActive = true
+            },
+            new User
+            {
+                Forename = "Inactive",
+                Surname = "User",
+                Email = "inactive@example.com",
+                IsActive = false
             }
         }.AsQueryable();
 

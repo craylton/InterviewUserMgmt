@@ -23,6 +23,24 @@ public class UserControllerTests
             .Which.Items.Should().BeEquivalentTo(users);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void List_WhenServiceFiltersUsers_ModelMustContainFilteredUsers(bool isActive)
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        var users = SetupUsers(isActive: isActive);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.List(isActive);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Model
+            .Should().BeOfType<UserListViewModel>()
+            .Which.Items.Should().BeEquivalentTo(users);
+    }
+
     private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
     {
         var users = new[]
@@ -38,6 +56,10 @@ public class UserControllerTests
 
         _userService
             .Setup(s => s.GetAll())
+            .Returns(users);
+
+        _userService
+            .Setup(s => s.FilterByActive(isActive))
             .Returns(users);
 
         return users;
