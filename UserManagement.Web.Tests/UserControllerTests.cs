@@ -23,15 +23,17 @@ public class UserControllerTests
             .Which.Items.Should().BeEquivalentTo(users);
     }
 
-    [Fact]
-    public void List_WhenServiceFiltersUsers_ModelMustContainFilteredUsers()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void List_WhenServiceFiltersUsers_ModelMustContainFilteredUsers(bool isActive)
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var controller = CreateController();
-        var users = SetupUsers(isActive: false);
+        var users = SetupUsers(isActive: isActive);
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = controller.List(false);
+        var result = controller.List(isActive);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Model
