@@ -16,11 +16,8 @@ public class UserService : IUserService
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    public IEnumerable<User> FilterByActive(bool isActive)
-    {
-        var filteredUsers = _dataAccess.GetAll<User>().Where(u => u.IsActive == isActive);
-        return [.. filteredUsers];
-    }
+    public IEnumerable<User> FilterByActive(bool isActive) =>
+        _dataAccess.GetAll<User>().Where(u => u.IsActive == isActive);
 
     public IEnumerable<User> GetAll() => _dataAccess.GetAll<User>();
 }

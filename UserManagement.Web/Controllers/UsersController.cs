@@ -25,7 +25,7 @@ public class UsersController : Controller
 
         var model = new UserListViewModel
         {
-            Items = [.. items]
+            Items = items.ToList()
         };
 
         return View(model);
