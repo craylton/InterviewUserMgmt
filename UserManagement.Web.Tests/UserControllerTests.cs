@@ -1,4 +1,3 @@
-using System.Linq;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
@@ -26,10 +25,10 @@ public class UserControllerTests
 
     [Fact]
     public void List_WhenServiceFiltersUsers_ModelMustContainFilteredUsers()
-        {
+    {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var controller = CreateController();
-        var users = SetupUsers().Where(user => !user.IsActive);
+        var users = SetupUsers(isActive: false);
 
         // Act: Invokes the method under test with the arranged parameters.
         var result = controller.List(false);
@@ -55,6 +54,10 @@ public class UserControllerTests
 
         _userService
             .Setup(s => s.GetAll())
+            .Returns(users);
+
+        _userService
+            .Setup(s => s.FilterByActive(isActive))
             .Returns(users);
 
         return users;
