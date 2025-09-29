@@ -55,7 +55,7 @@ public class UserServiceTests
         service.Create(user);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        _dataContext.Verify(dc => dc.Create(user), Times.Once);
+        _dataContext.Verify(s => s.Create(user), Times.Once);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class UserServiceTests
         service.Update(user);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        _dataContext.Verify(dc => dc.Update(user), Times.Once);
+        _dataContext.Verify(s => s.Update(user), Times.Once);
     }
 
     private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com")
