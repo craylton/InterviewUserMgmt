@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
@@ -46,30 +45,17 @@ public class UsersController : Controller
             return View(model);
         }
 
-        try
+        var user = new User
         {
-            if (model.DateOfBirth > DateTime.Today)
-            {
-                ModelState.AddModelError("DateOfBirth", "Date of Birth cannot be in the future.");
-                return View(model);
-            }
+            Id = model.Id,
+            Forename = model.Forename,
+            Surname = model.Surname,
+            Email = model.Email,
+            IsActive = model.IsActive,
+            DateOfBirth = model.DateOfBirth
+        };
 
-            var user = new User
-            {
-                Id = model.Id,
-                Forename = model.Forename,
-                Surname = model.Surname,
-                Email = model.Email,
-                IsActive = model.IsActive,
-                DateOfBirth = model.DateOfBirth
-            };
-
-            await _userService.CreateAsync(user);
-            return RedirectToAction(nameof(List));
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, "An error occurred while creating the user.");
-        }
+        await _userService.CreateAsync(user);
+        return RedirectToAction(nameof(List));
     }
 }
