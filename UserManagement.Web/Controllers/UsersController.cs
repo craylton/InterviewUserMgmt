@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
@@ -56,5 +58,26 @@ public class UsersController : Controller
 
         _userService.Create(user);
         return RedirectToAction(nameof(List));
+    }
+
+    [HttpGet("{id}")]
+    public IActionResult View(long id)
+    {
+        if (_userService.GetById(id) is not User user)
+        {
+            return NotFound();
+        }
+
+        var model = new UserViewModel
+        {
+            Id = user.Id,
+            Forename = user.Forename,
+            Surname = user.Surname,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            DateOfBirth = user.DateOfBirth
+        };
+
+        return View(model);
     }
 }

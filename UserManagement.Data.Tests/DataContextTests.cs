@@ -46,5 +46,33 @@ public class DataContextTests
         result.Should().NotContain(s => s.Email == entity.Email);
     }
 
+    [Fact]
+    public void GetById_WhenEntityExists_MustReturnEntity()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var context = CreateContext();
+        var entity = context.GetAll<User>().First();
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = context.GetById<User>(entity.Id);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().NotBeNull().And.BeEquivalentTo(entity);
+    }
+
+    [Fact]
+    public void GetById_WhenEntityDoesNotExist_MustReturnNull()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var context = CreateContext();
+        var nonExistentId = 999;
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = context.GetById<User>(nonExistentId);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeNull();
+    }
+
     private DataContext CreateContext() => new();
 }
