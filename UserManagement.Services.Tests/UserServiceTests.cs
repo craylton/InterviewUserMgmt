@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Implementations;
 
@@ -40,7 +39,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_WhenCreatingUser_MustCallDataContextCreateAsync()
+    public void Create_WhenCreatingUser_MustCallDataContextCreate()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var service = CreateService();
@@ -54,7 +53,7 @@ public class UserServiceTests
         };
 
         // Act: Invokes the method under test with the arranged parameters.
-        await service.Create(user);
+        service.Create(user);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         _dataContext.Verify(dc => dc.Create(user), Times.Once);

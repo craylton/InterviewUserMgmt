@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using UserManagement.Models;
 
 namespace UserManagement.Data.Tests;
@@ -8,7 +7,7 @@ namespace UserManagement.Data.Tests;
 public class DataContextTests
 {
     [Fact]
-    public async Task GetAll_WhenNewEntityAdded_MustIncludeNewEntity()
+    public void GetAll_WhenNewEntityAdded_MustIncludeNewEntity()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var context = CreateContext();
@@ -21,7 +20,7 @@ public class DataContextTests
             IsActive = true,
             DateOfBirth = new DateTime(1990, 5, 10)
         };
-        await context.Create(entity);
+        context.Create(entity);
 
         // Act: Invokes the method under test with the arranged parameters.
         var result = context.GetAll<User>();
