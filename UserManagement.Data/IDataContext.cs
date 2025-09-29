@@ -18,7 +18,7 @@ public interface IDataContext
     /// <typeparam name="TEntity"></typeparam>
     /// <param name="entity"></param>
     /// <returns></returns>
-    Task CreateAsync<TEntity>(TEntity entity) where TEntity : class;
+    void Create<TEntity>(TEntity entity) where TEntity : class;
 
     /// <summary>
     /// Uodate an existing item matching the ID

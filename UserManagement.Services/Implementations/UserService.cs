@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UserManagement.Data;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
@@ -22,5 +21,5 @@ public class UserService : IUserService
 
     public IEnumerable<User> GetAll() => _dataAccess.GetAll<User>();
 
-    public async Task CreateAsync(User user) => await _dataAccess.CreateAsync(user);
+    public void Create(User user) => _dataAccess.Create(user);
 }

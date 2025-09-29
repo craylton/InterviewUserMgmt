@@ -21,7 +21,7 @@ public class DataContextTests
             IsActive = true,
             DateOfBirth = new DateTime(1990, 5, 10)
         };
-        await context.CreateAsync(entity);
+        await context.Create(entity);
 
         // Act: Invokes the method under test with the arranged parameters.
         var result = context.GetAll<User>();

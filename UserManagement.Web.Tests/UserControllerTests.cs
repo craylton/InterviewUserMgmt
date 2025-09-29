@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
@@ -60,7 +59,7 @@ public class UserControllerTests
     }
 
     [Fact]
-    public async Task Add_WhenValidModel_CreatesUserAndRedirectsToList()
+    public void Add_WhenValidModel_CreatesUserAndRedirectsToList()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var controller = CreateController();
@@ -75,13 +74,13 @@ public class UserControllerTests
         };
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = await controller.Add(userViewModel);
+        var result = controller.Add(userViewModel);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
-        _userService.Verify(s => s.CreateAsync(It.Is<User>(u =>
+        _userService.Verify(s => s.Create(It.Is<User>(u =>
             u.Id == userViewModel.Id &&
             u.Forename == userViewModel.Forename &&
             u.Surname == userViewModel.Surname &&
@@ -91,7 +90,7 @@ public class UserControllerTests
     }
 
     [Fact]
-    public async Task Add_WhenInvalidModel_ReturnsViewWithSameModel()
+    public void Add_WhenInvalidModel_ReturnsViewWithSameModel()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var controller = CreateController();
@@ -106,13 +105,13 @@ public class UserControllerTests
         controller.ModelState.AddModelError("Email", "Invalid email address.");
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = await controller.Add(userViewModel);
+        var result = controller.Add(userViewModel);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeEquivalentTo(userViewModel);
 
-        _userService.Verify(s => s.CreateAsync(It.IsAny<User>()), Times.Never);
+        _userService.Verify(s => s.Create(It.IsAny<User>()), Times.Never);
     }
 
     private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)

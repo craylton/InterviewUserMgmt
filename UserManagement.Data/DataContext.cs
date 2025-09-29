@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Models;
 
@@ -34,10 +33,10 @@ public class DataContext : DbContext, IDataContext
     public IQueryable<TEntity> GetAll<TEntity>() where TEntity : class
         => base.Set<TEntity>();
 
-    public async Task CreateAsync<TEntity>(TEntity entity) where TEntity : class
+    public void Create<TEntity>(TEntity entity) where TEntity : class
     {
-        await base.AddAsync(entity);
-        await SaveChangesAsync();
+        base.Add(entity);
+        SaveChanges();
     }
 
     public new void Update<TEntity>(TEntity entity) where TEntity : class

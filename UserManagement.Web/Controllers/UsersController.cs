@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Threading.Tasks;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
@@ -38,7 +37,7 @@ public class UsersController : Controller
     public IActionResult Add() => View(new UserViewModel());
 
     [HttpPost("add")]
-    public async Task<IActionResult> Add(UserViewModel model)
+    public IActionResult Add(UserViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -55,7 +54,7 @@ public class UsersController : Controller
             DateOfBirth = model.DateOfBirth
         };
 
-        await _userService.CreateAsync(user);
+        _userService.Create(user);
         return RedirectToAction(nameof(List));
     }
 }
