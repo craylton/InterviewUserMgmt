@@ -20,4 +20,6 @@ public class UserService : IUserService
         _dataAccess.GetAll<User>().Where(u => u.IsActive == isActive);
 
     public IEnumerable<User> GetAll() => _dataAccess.GetAll<User>();
+
+    public void Create(User user) => _dataAccess.Create(user);
 }

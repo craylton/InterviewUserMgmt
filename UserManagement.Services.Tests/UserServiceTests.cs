@@ -38,6 +38,27 @@ public class UserServiceTests
         result.Should().OnlyContain(u => u.IsActive == isActive);
     }
 
+    [Fact]
+    public void Create_WhenCreatingUser_MustCallDataContextCreate()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var service = CreateService();
+        var user = new User
+        {
+            Forename = "Test",
+            Surname = "User",
+            Email = "test@example.com",
+            IsActive = true,
+            DateOfBirth = new DateTime(1990, 1, 1)
+        };
+
+        // Act: Invokes the method under test with the arranged parameters.
+        service.Create(user);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        _dataContext.Verify(dc => dc.Create(user), Times.Once);
+    }
+
     private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com")
     {
         var users = new[]

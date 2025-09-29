@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 
@@ -30,5 +31,30 @@ public class UsersController : Controller
         };
 
         return View(model);
+    }
+
+    [HttpGet("add")]
+    public IActionResult Add() => View(new UserViewModel());
+
+    [HttpPost("add")]
+    public IActionResult Add(UserViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = new User
+        {
+            Id = model.Id,
+            Forename = model.Forename,
+            Surname = model.Surname,
+            Email = model.Email,
+            IsActive = model.IsActive,
+            DateOfBirth = model.DateOfBirth
+        };
+
+        _userService.Create(user);
+        return RedirectToAction(nameof(List));
     }
 }
