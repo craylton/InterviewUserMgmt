@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
@@ -112,6 +113,56 @@ public class UserControllerTests
             .Which.Model.Should().BeEquivalentTo(userViewModel);
 
         _userService.Verify(s => s.Create(It.IsAny<User>()), Times.Never);
+    }
+
+    [Fact]
+    public void View_WhenUserNotFound_ReturnsNotFound()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        const long userId = 999;
+
+        _userService
+            .Setup(s => s.GetById(userId))
+            .Returns((User?)null);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.View(userId);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<NotFoundResult>();
+
+        _userService.Verify(s => s.GetById(userId), Times.Once);
+    }
+
+    [Fact]
+    public void View_WhenUserExists_ReturnsViewWithUserViewModel()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        var user = SetupUsers().First();
+
+        _userService
+            .Setup(s => s.GetById(user.Id))
+            .Returns(user);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.View(user.Id);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<ViewResult>()
+            .Which.Model.Should().BeOfType<UserViewModel>()
+            .Which.Should().BeEquivalentTo(new UserViewModel
+            {
+                Id = user.Id,
+                Forename = user.Forename,
+                Surname = user.Surname,
+                Email = user.Email,
+                IsActive = user.IsActive,
+                DateOfBirth = user.DateOfBirth
+            });
+
+        _userService.Verify(s => s.GetById(user.Id), Times.Once);
     }
 
     private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
