@@ -78,4 +78,47 @@ public class UsersController : Controller
 
         return View(model);
     }
+
+    [HttpGet("edit/{id}")]
+    public IActionResult Edit(long id)
+    {
+        if (_userService.GetById(id) is not User user)
+        {
+            return NotFound();
+        }
+
+        var model = new UserViewModel
+        {
+            Id = user.Id,
+            Forename = user.Forename,
+            Surname = user.Surname,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            DateOfBirth = user.DateOfBirth
+        };
+
+        return View(model);
+    }
+
+    [HttpPost("edit/{id}")]
+    public IActionResult Edit(long id, UserViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = new User
+        {
+            Id = id,
+            Forename = model.Forename,
+            Surname = model.Surname,
+            Email = model.Email,
+            IsActive = model.IsActive,
+            DateOfBirth = model.DateOfBirth
+        };
+
+        _userService.Update(user);
+        return RedirectToAction(nameof(List));
+    }
 }
