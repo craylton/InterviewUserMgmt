@@ -74,5 +74,26 @@ public class DataContextTests
         result.Should().BeNull();
     }
 
+    [Fact]
+    public void Update_WhenEntityExists_MustUpdateEntity()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var context = CreateContext();
+        var entity = context.GetAll<User>().First();
+
+        entity.Forename = "Updated";
+
+        // Act: Invokes the method under test with the arranged parameters.
+        context.Update(entity);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        var updatedEntity = context.GetById<User>(entity.Id);
+
+        updatedEntity.Should().NotBeNull()
+            .And.BeEquivalentTo(entity, options => options.Excluding(e => e.Forename));
+
+        updatedEntity.Forename.Should().Be("Updated");
+    }
+
     private DataContext CreateContext() => new();
 }

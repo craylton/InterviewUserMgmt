@@ -23,4 +23,5 @@ public class UserService : IUserService
 
     public void Create(User user) => _dataAccess.Create(user);
     public User? GetById(long id) => _dataAccess.GetById<User>(id);
+    public void Update(User user) => _dataAccess.Update(user);
 }

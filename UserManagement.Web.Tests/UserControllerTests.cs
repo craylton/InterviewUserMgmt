@@ -165,12 +165,125 @@ public class UserControllerTests
         _userService.Verify(s => s.GetById(user.Id), Times.Once);
     }
 
+    [Fact]
+    public void Edit_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        var user = SetupUsers().First();
+
+        _userService
+            .Setup(s => s.GetById(user.Id))
+            .Returns(user);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.Edit(user.Id);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<ViewResult>()
+            .Which.Model.Should().BeOfType<UserViewModel>()
+            .Which.Should().BeEquivalentTo(new UserViewModel
+            {
+                Id = user.Id,
+                Forename = user.Forename,
+                Surname = user.Surname,
+                Email = user.Email,
+                IsActive = user.IsActive,
+                DateOfBirth = user.DateOfBirth
+            });
+
+        _userService.Verify(s => s.GetById(user.Id), Times.Once);
+    }
+
+    [Fact]
+    public void Edit_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        const long userId = 999;
+
+        _userService
+            .Setup(s => s.GetById(userId))
+            .Returns((User?)null);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.Edit(userId);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<NotFoundResult>();
+
+        _userService.Verify(s => s.GetById(userId), Times.Once);
+    }
+
+    [Fact]
+    public void Edit_WhenPostRequest_AndValidModel_UpdatesUserAndRedirectsToList()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        var existingUser = SetupUsers().First();
+        var userViewModel = new UserViewModel
+        {
+            Id = existingUser.Id,
+            Forename = "Updated",
+            Surname = "User",
+            Email = "updated@example.com",
+            IsActive = false,
+            DateOfBirth = new DateTime(1985, 3, 10)
+        };
+
+        _userService
+            .Setup(s => s.GetById(existingUser.Id))
+            .Returns(existingUser);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.Edit(existingUser.Id, userViewModel);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<RedirectToActionResult>()
+            .Which.ActionName.Should().Be(nameof(UsersController.List));
+
+        _userService.Verify(s => s.Update(It.Is<User>(u =>
+            u.Id == existingUser.Id &&
+            u.Forename == userViewModel.Forename &&
+            u.Surname == userViewModel.Surname &&
+            u.Email == userViewModel.Email &&
+            u.IsActive == userViewModel.IsActive &&
+            u.DateOfBirth == userViewModel.DateOfBirth)), Times.Once);
+    }
+
+    [Fact]
+    public void Edit_WhenPostRequest_AndInvalidModel_ReturnsViewWithSameModel()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        const long userId = 1;
+        var userViewModel = new UserViewModel
+        {
+            Id = userId,
+            // Missing required fields to make model invalid
+            Email = "invalid-email"
+        };
+
+        // Simulate invalid ModelState
+        controller.ModelState.AddModelError("Email", "Invalid email address.");
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.Edit(userId, userViewModel);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<ViewResult>()
+            .Which.Model.Should().BeEquivalentTo(userViewModel);
+
+        _userService.Verify(s => s.Update(It.IsAny<User>()), Times.Never);
+    }
+
     private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
     {
         var users = new[]
         {
             new User
             {
+                Id = 1,
                 Forename = forename,
                 Surname = surname,
                 Email = email,

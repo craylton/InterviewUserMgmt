@@ -55,7 +55,7 @@ public class UserServiceTests
         service.Create(user);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        _dataContext.Verify(dc => dc.Create(user), Times.Once);
+        _dataContext.Verify(s => s.Create(user), Times.Once);
     }
 
     [Fact]
@@ -87,6 +87,28 @@ public class UserServiceTests
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeNull();
         _dataContext.Verify(s => s.GetById<User>(999L), Times.Once);
+    }
+
+    [Fact]
+    public void Update_WhenUpdatingUser_MustCallDataContextUpdate()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var service = CreateService();
+        var user = new User
+        {
+            Id = 1,
+            Forename = "Updated",
+            Surname = "User",
+            Email = "updated@example.com",
+            IsActive = false,
+            DateOfBirth = new DateTime(1985, 5, 15)
+        };
+
+        // Act: Invokes the method under test with the arranged parameters.
+        service.Update(user);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        _dataContext.Verify(s => s.Update(user), Times.Once);
     }
 
     private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com")
