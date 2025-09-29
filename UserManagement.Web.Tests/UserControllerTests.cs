@@ -99,14 +99,10 @@ public class UserControllerTests
         {
             Id = 1,
             // Missing required fields to make model invalid
-            Forename = "",
-            Surname = "",
             Email = "invalid-email"
         };
 
         // Simulate invalid ModelState
-        controller.ModelState.AddModelError("Forename", "Forename is required.");
-        controller.ModelState.AddModelError("Surname", "Surname is required.");
         controller.ModelState.AddModelError("Email", "Invalid email address.");
 
         // Act: Invokes the method under test with the arranged parameters.
