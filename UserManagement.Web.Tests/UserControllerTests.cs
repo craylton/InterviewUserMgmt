@@ -277,6 +277,88 @@ public class UserControllerTests
         _userService.Verify(s => s.Update(It.IsAny<User>()), Times.Never);
     }
 
+    [Fact]
+    public void Delete_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        var user = SetupUsers().First();
+
+        _userService
+            .Setup(s => s.GetById(user.Id))
+            .Returns(user);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.Delete(user.Id);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<ViewResult>()
+            .Which.Model.Should().BeOfType<UserViewModel>()
+            .Which.Should().BeEquivalentTo(new UserViewModel
+            {
+                Id = user.Id,
+                Forename = user.Forename,
+                Surname = user.Surname,
+                Email = user.Email,
+                IsActive = user.IsActive,
+                DateOfBirth = user.DateOfBirth
+            });
+
+        _userService.Verify(s => s.GetById(user.Id), Times.Once);
+    }
+
+    [Fact]
+    public void Delete_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        const long userId = 999;
+
+        _userService
+            .Setup(s => s.GetById(userId))
+            .Returns((User?)null);
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.Delete(userId);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<NotFoundResult>();
+
+        _userService.Verify(s => s.GetById(userId), Times.Once);
+    }
+
+    [Fact]
+    public void Delete_WhenPostRequest_DeletesUserAndRedirectsToList()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var controller = CreateController();
+        var user = SetupUsers().First();
+        var userViewModel = new UserViewModel
+        {
+            Id = user.Id,
+            Forename = user.Forename,
+            Surname = user.Surname,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            DateOfBirth = user.DateOfBirth
+        };
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var result = controller.Delete(user.Id, userViewModel);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        result.Should().BeOfType<RedirectToActionResult>()
+            .Which.ActionName.Should().Be(nameof(UsersController.List));
+
+        _userService.Verify(s => s.Delete(It.Is<User>(u =>
+            u.Id == user.Id &&
+            u.Forename == user.Forename &&
+            u.Surname == user.Surname &&
+            u.Email == user.Email &&
+            u.IsActive == user.IsActive &&
+            u.DateOfBirth == user.DateOfBirth)), Times.Once);
+    }
+
     private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
     {
         var users = new[]

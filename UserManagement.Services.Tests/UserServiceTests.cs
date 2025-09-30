@@ -111,6 +111,20 @@ public class UserServiceTests
         _dataContext.Verify(s => s.Update(user), Times.Once);
     }
 
+    [Fact]
+    public void Delete_WhenDeletingUser_MustCallDataContextDelete()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        var service = CreateService();
+        var user = SetupUsers().First();
+
+        // Act: Invokes the method under test with the arranged parameters.
+        service.Delete(user);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        _dataContext.Verify(s => s.Delete(user), Times.Once);
+    }
+
     private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com")
     {
         var users = new[]
