@@ -2,27 +2,16 @@
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Data;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Interfaces;
+using UserManagement.Data.Entities;
+using UserManagement.Services.Interfaces;
 
-namespace UserManagement.Services.Domain.Implementations;
+namespace UserManagement.Services.Implementations;
 
-public class UserService : IUserService
+public class UserService(IDataContext dataAccess, IChangeLogService changeLogService) : IUserService
 {
-    private readonly IDataContext _dataAccess;
-    private readonly IChangeLogService _changeLogService;
+    private readonly IDataContext _dataAccess = dataAccess;
+    private readonly IChangeLogService _changeLogService = changeLogService;
 
-    public UserService(IDataContext dataAccess, IChangeLogService changeLogService)
-    {
-        _dataAccess = dataAccess;
-        _changeLogService = changeLogService;
-    }
-
-    /// <summary>
-    /// Return users by active state
-    /// </summary>
-    /// <param name="isActive"></param>
-    /// <returns></returns>
     public IEnumerable<User> FilterByActive(bool isActive) =>
         _dataAccess.GetAll<User>().Where(u => u.IsActive == isActive);
 

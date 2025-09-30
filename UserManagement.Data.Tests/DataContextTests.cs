@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using UserManagement.Models;
+using UserManagement.Data.Entities;
 
 namespace UserManagement.Data.Tests;
 
@@ -10,7 +10,7 @@ public class DataContextTests
     [Fact]
     public void GetAll_WhenNewEntityAdded_MustIncludeNewEntity()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var context = CreateContext();
 
         var entity = new User
@@ -23,10 +23,10 @@ public class DataContextTests
         };
         context.Create(entity);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = context.GetAll<User>();
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result
             .Should().Contain(s => s.Email == entity.Email)
             .Which.Should().BeEquivalentTo(entity);
@@ -35,59 +35,59 @@ public class DataContextTests
     [Fact]
     public void GetAll_WhenDeleted_MustNotIncludeDeletedEntity()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var context = CreateContext();
         var entity = context.GetAll<User>().First();
         context.Delete(entity);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = context.GetAll<User>();
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().NotContain(s => s.Email == entity.Email);
     }
 
     [Fact]
     public void GetById_WhenEntityExists_MustReturnEntity()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var context = CreateContext();
         var entity = context.GetAll<User>().First();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = context.GetById<User>(entity.Id);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(entity);
     }
 
     [Fact]
     public void GetById_WhenEntityDoesNotExist_MustReturnNull()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var context = CreateContext();
         var nonExistentId = 999;
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = context.GetById<User>(nonExistentId);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeNull();
     }
 
     [Fact]
     public void Update_WhenEntityExists_MustUpdateEntity()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var context = CreateContext();
         var entity = context.GetAll<User>().First();
 
         entity.Forename = "Updated";
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         context.Update(entity);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         var updatedEntity = context.GetById<User>(entity.Id);
 
         updatedEntity.Should().NotBeNull()

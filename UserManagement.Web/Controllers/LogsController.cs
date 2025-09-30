@@ -1,15 +1,13 @@
 using System.Linq;
-using UserManagement.Services.Domain.Interfaces;
+using UserManagement.Services.Interfaces;
 using UserManagement.Web.Models.Logs;
 
-namespace UserManagement.WebMS.Controllers;
+namespace UserManagement.Web.Controllers;
 
 [Route("logs")]
-public class LogsController : Controller
+public class LogsController(IChangeLogService changeLogService) : Controller
 {
-    private readonly IChangeLogService _changeLogService;
-
-    public LogsController(IChangeLogService changeLogService) => _changeLogService = changeLogService;
+    private readonly IChangeLogService _changeLogService = changeLogService;
 
     [HttpGet]
     public ViewResult List(int page = 1)

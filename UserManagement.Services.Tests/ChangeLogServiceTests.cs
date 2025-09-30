@@ -1,16 +1,17 @@
 using System;
 using System.Linq;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Implementations;
+using UserManagement.Data;
+using UserManagement.Data.Entities;
+using UserManagement.Services.Implementations;
 
-namespace UserManagement.Data.Tests;
+namespace UserManagement.Services.Tests;
 
 public class ChangeLogServiceTests
 {
     [Fact]
     public void LogAdd_WhenLoggingUserAdd_MustCallDataContextCreate()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var user = new User
         {
@@ -22,10 +23,10 @@ public class ChangeLogServiceTests
             DateOfBirth = new DateTime(1990, 1, 1)
         };
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         service.LogAdd(user);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == user.Id &&
             entry.Action == ChangeActionType.Add &&
@@ -36,7 +37,7 @@ public class ChangeLogServiceTests
     [Fact]
     public void LogDelete_WhenLoggingUserDelete_MustCallDataContextCreate()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var user = new User
         {
@@ -48,10 +49,10 @@ public class ChangeLogServiceTests
             DateOfBirth = new DateTime(1985, 5, 15)
         };
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         service.LogDelete(user);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == user.Id &&
             entry.Action == ChangeActionType.Delete &&
@@ -62,7 +63,7 @@ public class ChangeLogServiceTests
     [Fact]
     public void LogUpdate_WhenLoggingUserUpdate_MustCallDataContextCreateForEachChange()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var beforeUser = new User
         {
@@ -83,10 +84,10 @@ public class ChangeLogServiceTests
             DateOfBirth = new DateTime(1985, 5, 15)
         };
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         service.LogUpdate(beforeUser, afterUser);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         _dataContext.Verify(s => s.Create(It.IsAny<ChangeLogEntry>()), Times.Exactly(5));
 
         _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
@@ -105,7 +106,7 @@ public class ChangeLogServiceTests
     [Fact]
     public void LogUpdate_WhenNoChanges_MustNotCallDataContextCreate()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var user = new User
         {
@@ -117,24 +118,24 @@ public class ChangeLogServiceTests
             DateOfBirth = new DateTime(1990, 1, 1)
         };
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         service.LogUpdate(user, user);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         _dataContext.Verify(s => s.Create(It.IsAny<ChangeLogEntry>()), Times.Never);
     }
 
     [Fact]
     public void GetAll_WhenRetrievingLogs_MustReturnPagedResultsOrderedByTimestamp()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         SetupChangeLogEntries();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetAll(1, 2, out var totalCount);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().HaveCount(2);
         totalCount.Should().Be(3);
         result.First().Timestamp.Should().BeAfter(result.Last().Timestamp);
@@ -143,14 +144,14 @@ public class ChangeLogServiceTests
     [Fact]
     public void GetAll_WhenRetrievingSecondPage_MustReturnCorrectPagedResults()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         SetupChangeLogEntries();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetAll(2, 2, out var totalCount);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().HaveCount(1);
         totalCount.Should().Be(3);
     }
@@ -158,14 +159,14 @@ public class ChangeLogServiceTests
     [Fact]
     public void GetByUser_WhenRetrievingLogsForSpecificUser_MustReturnOnlyUserLogs()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var logs = SetupChangeLogEntries();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetByUser(1, 1, 10, out var totalCount);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().HaveCount(2).And.OnlyContain(log => log.UserId == 1);
         totalCount.Should().Be(2);
     }
@@ -173,14 +174,14 @@ public class ChangeLogServiceTests
     [Fact]
     public void GetByUser_WhenNoLogsExistForUser_MustReturnEmptyResult()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         SetupChangeLogEntries();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetByUser(999, 1, 10, out var totalCount);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeEmpty();
         totalCount.Should().Be(0);
     }
@@ -188,7 +189,7 @@ public class ChangeLogServiceTests
     [Fact]
     public void GetById_WhenLogExists_MustReturnLog()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var expectedLog = new ChangeLogEntry
         {
@@ -200,10 +201,10 @@ public class ChangeLogServiceTests
         };
         _dataContext.Setup(s => s.GetById<ChangeLogEntry>(1L)).Returns(expectedLog);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetById(1);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(expectedLog);
         _dataContext.Verify(s => s.GetById<ChangeLogEntry>(1L), Times.Once);
     }
@@ -211,14 +212,14 @@ public class ChangeLogServiceTests
     [Fact]
     public void GetById_WhenLogDoesNotExist_MustReturnNull()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         _dataContext.Setup(s => s.GetById<ChangeLogEntry>(999L)).Returns((ChangeLogEntry?)null);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetById(999);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeNull();
         _dataContext.Verify(s => s.GetById<ChangeLogEntry>(999L), Times.Once);
     }

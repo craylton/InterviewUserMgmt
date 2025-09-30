@@ -1,28 +1,22 @@
 ﻿using System.Linq;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 using UserManagement.Web.Models.Logs;
+using UserManagement.Services.Interfaces;
+using UserManagement.Data.Entities;
 
-namespace UserManagement.WebMS.Controllers;
+namespace UserManagement.Web.Controllers;
 
 [Route("users")]
-public class UsersController : Controller
+public class UsersController(IUserService userService, IChangeLogService changeLogService) : Controller
 {
-    private readonly IUserService _userService;
-    private readonly IChangeLogService _changeLogService;
-
-    public UsersController(IUserService userService, IChangeLogService changeLogService)
-    {
-        _userService = userService;
-        _changeLogService = changeLogService;
-    }
+    private readonly IUserService _userService = userService;
+    private readonly IChangeLogService _changeLogService = changeLogService;
 
     [HttpGet]
     public ViewResult List([FromQuery(Name = "isActive")] bool? isActive = null)
     {
         var filteredUsers = isActive.HasValue ? _userService.FilterByActive(isActive.Value) : _userService.GetAll();
-        var items = filteredUsers.Select(p => new UserListItemViewModel
+        var items = filteredUsers.Select(p => new UserViewModel
         {
             Id = p.Id,
             Forename = p.Forename,
@@ -34,7 +28,7 @@ public class UsersController : Controller
 
         var model = new UserListViewModel
         {
-            Items = items.ToList()
+            Items = [.. items]
         };
 
         return View(model);

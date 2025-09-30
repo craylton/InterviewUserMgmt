@@ -2,7 +2,7 @@ namespace UserManagement.Web.Models.Logs;
 
 public class LogListViewModel
 {
-    public IEnumerable<LogListItemViewModel> Items { get; set; } = new List<LogListItemViewModel>();
+    public IEnumerable<LogListItemViewModel> Items { get; set; } = [];
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 10;
     public int TotalCount { get; set; }

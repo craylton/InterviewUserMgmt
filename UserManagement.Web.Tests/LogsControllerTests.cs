@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Interfaces;
-using UserManagement.WebMS.Controllers;
 using UserManagement.Web.Models.Logs;
+using UserManagement.Services.Interfaces;
+using UserManagement.Web.Controllers;
+using UserManagement.Data.Entities;
 
 namespace UserManagement.Web.Tests;
 
