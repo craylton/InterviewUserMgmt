@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace UserManagement.Web.Models.Logs;
 
 public class LogListViewModel

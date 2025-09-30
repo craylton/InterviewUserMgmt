@@ -1,5 +1,4 @@
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Logs;
 
@@ -16,6 +15,7 @@ public class LogsController : Controller
     public ViewResult List(int page = 1)
     {
         var logs = _changeLogService.GetAll(page, 10, out var totalCount);
+
         var items = logs.Select(l => new LogListItemViewModel
         {
             Id = l.Id,
@@ -39,7 +39,8 @@ public class LogsController : Controller
     public IActionResult View(long id, string? returnTo = null)
     {
         var log = _changeLogService.GetById(id);
-        if (log == null)
+
+        if (log is null)
         {
             return NotFound();
         }

@@ -24,6 +24,7 @@ public class ChangeLogService : IChangeLogService
                 Action = ChangeActionType.Add,
                 Description = null
             };
+
             _dataContext.Create(logEntry);
         }
         catch
@@ -43,6 +44,7 @@ public class ChangeLogService : IChangeLogService
                 Action = ChangeActionType.Delete,
                 Description = null
             };
+
             _dataContext.Create(logEntry);
         }
         catch
@@ -65,6 +67,7 @@ public class ChangeLogService : IChangeLogService
                     Action = ChangeActionType.Update,
                     Description = change
                 };
+
                 _dataContext.Create(logEntry);
             }
         }
@@ -78,11 +81,10 @@ public class ChangeLogService : IChangeLogService
     {
         var query = _dataContext.GetAll<ChangeLogEntry>().OrderByDescending(x => x.Timestamp);
         totalCount = query.Count();
-        
+
         return query
             .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+            .Take(pageSize);
     }
 
     public IEnumerable<ChangeLogEntry> GetByUser(long userId, int pageNumber, int pageSize, out int totalCount)
@@ -90,13 +92,12 @@ public class ChangeLogService : IChangeLogService
         var query = _dataContext.GetAll<ChangeLogEntry>()
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.Timestamp);
-        
+
         totalCount = query.Count();
-        
+
         return query
             .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+            .Take(pageSize);
     }
 
     public ChangeLogEntry? GetById(long id) => _dataContext.GetById<ChangeLogEntry>(id);

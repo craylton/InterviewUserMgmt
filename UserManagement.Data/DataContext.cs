@@ -8,9 +8,14 @@ namespace UserManagement.Data;
 public class DataContext : DbContext, IDataContext
 {
     public DataContext() => Database.EnsureCreated();
+    public DataContext(DbContextOptions<DataContext> options) : base(options)
+        => Database.EnsureCreated();
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseInMemoryDatabase("UserManagement.Data.DataContext");
+    {
+        if (!options.IsConfigured)
+            options.UseInMemoryDatabase("UserManagement.Data.DataContext");
+    }
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -31,8 +36,7 @@ public class DataContext : DbContext, IDataContext
 
         // Configure ChangeLogEntry to NOT have a foreign key relationship
         // This allows logs to persist even when the referenced user is deleted
-        model.Entity<ChangeLogEntry>()
-            .Ignore(c => c.User); // Ignore the navigation property to prevent FK creation
+        model.Entity<ChangeLogEntry>().Ignore(c => c.User);
     }
 
     public DbSet<User>? Users { get; set; }

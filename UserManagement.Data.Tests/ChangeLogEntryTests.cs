@@ -1,24 +1,21 @@
 using System;
 using System.Linq;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using UserManagement.Data;
 using UserManagement.Models;
-using Xunit;
 
 namespace UserManagement.Data.Tests;
 
 public class ChangeLogEntryTests
 {
     [Fact]
-    public void Create_WhenNewChangeLogEntry_ShouldReturnChangeLogEntryWithNewId()
+    public void Create_WhenNewChangeLogEntry_ShouldAssignId()
     {
         // Arrange
         using var context = CreateContext();
-        var changeLogEntry = new ChangeLogEntry 
-        { 
-            UserId = 1, 
-            Timestamp = DateTime.UtcNow, 
+        var changeLogEntry = new ChangeLogEntry
+        {
+            UserId = 1,
+            Timestamp = DateTime.UtcNow,
             Action = ChangeActionType.Add,
             Description = null
         };
@@ -35,16 +32,16 @@ public class ChangeLogEntryTests
     {
         // Arrange
         using var context = CreateContext();
-        var changeLogEntry1 = new ChangeLogEntry 
-        { 
-            UserId = 1, 
-            Timestamp = DateTime.UtcNow, 
+        var changeLogEntry1 = new ChangeLogEntry
+        {
+            UserId = 1,
+            Timestamp = DateTime.UtcNow,
             Action = ChangeActionType.Add
         };
-        var changeLogEntry2 = new ChangeLogEntry 
-        { 
-            UserId = 2, 
-            Timestamp = DateTime.UtcNow.AddMinutes(1), 
+        var changeLogEntry2 = new ChangeLogEntry
+        {
+            UserId = 2,
+            Timestamp = DateTime.UtcNow.AddMinutes(1),
             Action = ChangeActionType.Update,
             Description = "Test update"
         };
@@ -63,10 +60,10 @@ public class ChangeLogEntryTests
     {
         // Arrange
         using var context = CreateContext();
-        var changeLogEntry = new ChangeLogEntry 
-        { 
-            UserId = 1, 
-            Timestamp = DateTime.UtcNow, 
+        var changeLogEntry = new ChangeLogEntry
+        {
+            UserId = 1,
+            Timestamp = DateTime.UtcNow,
             Action = ChangeActionType.Delete
         };
         context.Create(changeLogEntry);
@@ -99,10 +96,10 @@ public class ChangeLogEntryTests
     {
         // Arrange
         using var context = CreateContext();
-        var changeLogEntry = new ChangeLogEntry 
-        { 
-            UserId = 1, 
-            Timestamp = DateTime.UtcNow, 
+        var changeLogEntry = new ChangeLogEntry
+        {
+            UserId = 1,
+            Timestamp = DateTime.UtcNow,
             Action = ChangeActionType.Add,
             Description = "Original description"
         };
@@ -123,10 +120,10 @@ public class ChangeLogEntryTests
     {
         // Arrange
         using var context = CreateContext();
-        var changeLogEntry = new ChangeLogEntry 
-        { 
-            UserId = 1, 
-            Timestamp = DateTime.UtcNow, 
+        var changeLogEntry = new ChangeLogEntry
+        {
+            UserId = 1,
+            Timestamp = DateTime.UtcNow,
             Action = ChangeActionType.Add
         };
         context.Create(changeLogEntry);
@@ -139,19 +136,12 @@ public class ChangeLogEntryTests
         result.Should().BeNull();
     }
 
-    private static TestDataContext CreateContext() => new();
-}
-
-// Test-specific DataContext that uses a unique database name for each instance
-public class TestDataContext : DataContext
-{
-    private readonly string _databaseName = Guid.NewGuid().ToString();
-
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseInMemoryDatabase(_databaseName);
-
-    public TestDataContext()
+    private static DataContext CreateContext()
     {
-        Database.EnsureCreated();
+        var options = new DbContextOptionsBuilder<DataContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        return new DataContext(options);
     }
 }

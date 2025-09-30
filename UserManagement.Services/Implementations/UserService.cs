@@ -42,10 +42,10 @@ public class UserService : IUserService
         var existing = _dataAccess.GetAll<User>()
             .AsNoTracking()
             .FirstOrDefault(u => u.Id == user.Id);
-            
+
         _dataAccess.Update(user);
-        
-        if (existing != null)
+
+        if (existing is not null)
         {
             _changeLogService.LogUpdate(existing, user);
         }

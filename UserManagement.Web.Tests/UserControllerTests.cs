@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 using UserManagement.WebMS.Controllers;
-using Xunit;
 
 namespace UserManagement.Data.Tests;
 

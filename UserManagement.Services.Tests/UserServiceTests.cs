@@ -1,9 +1,5 @@
 using System;
 using System.Linq;
-using Moq;
-using Xunit;
-using FluentAssertions;
-using UserManagement.Data;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Implementations;
 using UserManagement.Services.Domain.Interfaces;
