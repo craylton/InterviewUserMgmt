@@ -1,7 +1,12 @@
 using System;
 using System.Linq;
+using Moq;
+using Xunit;
+using FluentAssertions;
+using UserManagement.Data;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Implementations;
+using UserManagement.Services.Domain.Interfaces;
 
 namespace UserManagement.Data.Tests;
 
@@ -56,6 +61,7 @@ public class UserServiceTests
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         _dataContext.Verify(s => s.Create(user), Times.Once);
+        _changeLogService.Verify(s => s.LogAdd(user), Times.Once);
     }
 
     [Fact]
@@ -94,7 +100,16 @@ public class UserServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var service = CreateService();
-        var user = new User
+        var existingUser = new User
+        {
+            Id = 1,
+            Forename = "Original",
+            Surname = "User",
+            Email = "original@example.com",
+            IsActive = true,
+            DateOfBirth = new DateTime(1990, 1, 1)
+        };
+        var updatedUser = new User
         {
             Id = 1,
             Forename = "Updated",
@@ -103,12 +118,17 @@ public class UserServiceTests
             IsActive = false,
             DateOfBirth = new DateTime(1985, 5, 15)
         };
+        
+        // Setup GetAll to return the existing user for comparison
+        var users = new[] { existingUser }.AsQueryable();
+        _dataContext.Setup(s => s.GetAll<User>()).Returns(users);
 
         // Act: Invokes the method under test with the arranged parameters.
-        service.Update(user);
+        service.Update(updatedUser);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        _dataContext.Verify(s => s.Update(user), Times.Once);
+        _dataContext.Verify(s => s.Update(updatedUser), Times.Once);
+        _changeLogService.Verify(s => s.LogUpdate(existingUser, updatedUser), Times.Once);
     }
 
     [Fact]
@@ -122,6 +142,7 @@ public class UserServiceTests
         service.Delete(user);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
+        _changeLogService.Verify(s => s.LogDelete(user), Times.Once);
         _dataContext.Verify(s => s.Delete(user), Times.Once);
     }
 
@@ -159,5 +180,6 @@ public class UserServiceTests
     }
 
     private readonly Mock<IDataContext> _dataContext = new();
-    private UserService CreateService() => new(_dataContext.Object);
+    private readonly Mock<IChangeLogService> _changeLogService = new();
+    private UserService CreateService() => new(_dataContext.Object, _changeLogService.Object);
 }

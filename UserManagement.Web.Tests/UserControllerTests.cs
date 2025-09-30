@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 using UserManagement.WebMS.Controllers;
+using Xunit;
 
 namespace UserManagement.Data.Tests;
 
@@ -136,33 +140,52 @@ public class UserControllerTests
     }
 
     [Fact]
-    public void View_WhenUserExists_ReturnsViewWithUserViewModel()
+    public void View_WhenUserExists_ReturnsViewWithUserDetailsViewModel()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var controller = CreateController();
         var user = SetupUsers().First();
+        var logs = new[]
+        {
+            new ChangeLogEntry { Id = 1, UserId = user.Id, Action = ChangeActionType.Add, Timestamp = DateTime.UtcNow }
+        };
 
         _userService
             .Setup(s => s.GetById(user.Id))
             .Returns(user);
 
+        _changeLogService
+            .Setup(s => s.GetByUser(user.Id, 1, 10, out It.Ref<int>.IsAny))
+            .Returns((long userId, int page, int pageSize, out int totalCount) =>
+            {
+                totalCount = 1;
+                return logs;
+            });
+
         // Act: Invokes the method under test with the arranged parameters.
         var result = controller.View(user.Id);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        result.Should().BeOfType<ViewResult>()
-            .Which.Model.Should().BeOfType<UserViewModel>()
-            .Which.Should().BeEquivalentTo(new UserViewModel
-            {
-                Id = user.Id,
-                Forename = user.Forename,
-                Surname = user.Surname,
-                Email = user.Email,
-                IsActive = user.IsActive,
-                DateOfBirth = user.DateOfBirth
-            });
+        result.Should().BeOfType<ViewResult>();
+        var viewResult = (ViewResult)result;
+        viewResult.Model.Should().BeOfType<UserDetailsViewModel>();
+        
+        var model = (UserDetailsViewModel)viewResult.Model!;
+        model.User.Should().BeEquivalentTo(new UserViewModel
+        {
+            Id = user.Id,
+            Forename = user.Forename,
+            Surname = user.Surname,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            DateOfBirth = user.DateOfBirth
+        });
+        
+        model.Logs.Items.Should().HaveCount(1);
+        model.Logs.TotalCount.Should().Be(1);
 
         _userService.Verify(s => s.GetById(user.Id), Times.Once);
+        _changeLogService.Verify(s => s.GetByUser(user.Id, 1, 10, out It.Ref<int>.IsAny), Times.Once);
     }
 
     [Fact]
@@ -386,5 +409,6 @@ public class UserControllerTests
     }
 
     private readonly Mock<IUserService> _userService = new();
-    private UsersController CreateController() => new(_userService.Object);
+    private readonly Mock<IChangeLogService> _changeLogService = new();
+    private UsersController CreateController() => new(_userService.Object, _changeLogService.Object);
 }

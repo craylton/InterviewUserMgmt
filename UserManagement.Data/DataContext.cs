@@ -13,7 +13,8 @@ public class DataContext : DbContext, IDataContext
         => options.UseInMemoryDatabase("UserManagement.Data.DataContext");
 
     protected override void OnModelCreating(ModelBuilder model)
-        => model.Entity<User>().HasData(new[]
+    {
+        model.Entity<User>().HasData(new[]
         {
             new User { Id = 1, Forename = "Peter", Surname = "Loew", Email = "ploew@example.com", IsActive = true, DateOfBirth = new DateTime(1985, 3, 15) },
             new User { Id = 2, Forename = "Benjamin Franklin", Surname = "Gates", Email = "bfgates@example.com", IsActive = true, DateOfBirth = new DateTime(1976, 7, 22) },
@@ -28,7 +29,14 @@ public class DataContext : DbContext, IDataContext
             new User { Id = 11, Forename = "Robin", Surname = "Feld", Email = "rfeld@example.com", IsActive = true, DateOfBirth = new DateTime(1966, 8, 3) },
         });
 
+        // Configure ChangeLogEntry to NOT have a foreign key relationship
+        // This allows logs to persist even when the referenced user is deleted
+        model.Entity<ChangeLogEntry>()
+            .Ignore(c => c.User); // Ignore the navigation property to prevent FK creation
+    }
+
     public DbSet<User>? Users { get; set; }
+    public DbSet<ChangeLogEntry>? ChangeLogs { get; set; }
 
     public IQueryable<TEntity> GetAll<TEntity>() where TEntity : class
         => base.Set<TEntity>();

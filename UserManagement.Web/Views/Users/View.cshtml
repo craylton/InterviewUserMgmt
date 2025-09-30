@@ -1,4 +1,4 @@
-﻿@model UserManagement.Web.Models.Users.UserViewModel
+﻿@model UserManagement.Web.Models.Users.UserDetailsViewModel
 
 <h2>View User</h2>
 
@@ -7,47 +7,122 @@
         <div class="row mb-3">
             <label class="col-sm-4 col-form-label">ID</label>
             <div class="col-sm-8">
-                <div class="form-control-plaintext">@Model.Id</div>
+                <div class="form-control-plaintext">@Model.User.Id</div>
             </div>
         </div>
 
         <div class="row mb-3">
-            <label asp-for="Forename" class="col-sm-4 col-form-label"></label>
+            <label asp-for="User.Forename" class="col-sm-4 col-form-label"></label>
             <div class="col-sm-8">
-                <div class="form-control-plaintext">@Model.Forename</div>
+                <div class="form-control-plaintext">@Model.User.Forename</div>
             </div>
         </div>
 
         <div class="row mb-3">
-            <label asp-for="Surname" class="col-sm-4 col-form-label"></label>
+            <label asp-for="User.Surname" class="col-sm-4 col-form-label"></label>
             <div class="col-sm-8">
-                <div class="form-control-plaintext">@Model.Surname</div>
+                <div class="form-control-plaintext">@Model.User.Surname</div>
             </div>
         </div>
 
         <div class="row mb-3">
-            <label asp-for="Email" class="col-sm-4 col-form-label"></label>
+            <label asp-for="User.Email" class="col-sm-4 col-form-label"></label>
             <div class="col-sm-8">
-                <div class="form-control-plaintext">@Model.Email</div>
+                <div class="form-control-plaintext">@Model.User.Email</div>
             </div>
         </div>
 
         <div class="row mb-3">
-            <label asp-for="DateOfBirth" class="col-sm-4 col-form-label"></label>
+            <label asp-for="User.DateOfBirth" class="col-sm-4 col-form-label"></label>
             <div class="col-sm-8">
-                <div class="form-control-plaintext">@Model.DateOfBirth.ToString("yyyy-MM-dd")</div>
+                <div class="form-control-plaintext">@Model.User.DateOfBirth.ToString("yyyy-MM-dd")</div>
             </div>
         </div>
 
         <div class="row mb-3">
-            <label asp-for="IsActive" class="col-sm-4 col-form-label"></label>
+            <label asp-for="User.IsActive" class="col-sm-4 col-form-label"></label>
             <div class="col-sm-8">
-                <div class="form-control-plaintext">@(Model.IsActive ? "Yes" : "No")</div>
+                <div class="form-control-plaintext">@(Model.User.IsActive ? "Yes" : "No")</div>
             </div>
         </div>
 
         <div class="form-group">
             <a asp-action="List" class="btn btn-secondary">List</a>
         </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>Change History</h3>
+        
+        @if (Model.Logs.Items.Any())
+        {
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Timestamp</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.Logs.Items)
+                    {
+                        <tr>
+                            <td>
+                                <span class="badge @(log.Action switch 
+                                { 
+                                    UserManagement.Models.ChangeActionType.Add => "bg-success",
+                                    UserManagement.Models.ChangeActionType.Update => "bg-warning",
+                                    UserManagement.Models.ChangeActionType.Delete => "bg-danger",
+                                    _ => "bg-secondary"
+                                })">
+                                    @log.Action
+                                </span>
+                            </td>
+                            <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td>
+                                <a href="/logs/@log.Id?returnTo=@System.Web.HttpUtility.UrlEncode($"/users/{Model.User.Id}?page={Model.Logs.PageNumber}")" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (Model.Logs.TotalPages > 1)
+            {
+                <nav aria-label="User log pagination">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.Logs.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="/users/@Model.User.Id?page=@(Model.Logs.PageNumber - 1)">Previous</a>
+                            </li>
+                        }
+
+                        @for (int i = 1; i <= Model.Logs.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.Logs.PageNumber ? "active" : "")">
+                                <a class="page-link" href="/users/@Model.User.Id?page=@i">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.Logs.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="/users/@Model.User.Id?page=@(Model.Logs.PageNumber + 1)">Next</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <p>No change history found for this user.</p>
+            </div>
+        }
     </div>
 </div>
