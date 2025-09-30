@@ -121,4 +121,42 @@ public class UsersController : Controller
         _userService.Update(user);
         return RedirectToAction(nameof(List));
     }
+
+    [HttpGet("delete/{id}")]
+    public IActionResult Delete(long id)
+    {
+        if (_userService.GetById(id) is not User user)
+        {
+            return NotFound();
+        }
+
+        var model = new UserViewModel
+        {
+            Id = user.Id,
+            Forename = user.Forename,
+            Surname = user.Surname,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            DateOfBirth = user.DateOfBirth
+        };
+
+        return View(model);
+    }
+
+    [HttpPost("delete/{id}")]
+    public IActionResult Delete(long id, UserViewModel model)
+    {
+        var user = new User
+        {
+            Id = model.Id,
+            Forename = model.Forename,
+            Surname = model.Surname,
+            Email = model.Email,
+            IsActive = model.IsActive,
+            DateOfBirth = model.DateOfBirth
+        };
+
+        _userService.Delete(user);
+        return RedirectToAction(nameof(List));
+    }
 }
