@@ -116,15 +116,7 @@ public class UserServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var service = CreateService();
-        var user = new User
-        {
-            Id = 1,
-            Forename = "Test",
-            Surname = "User",
-            Email = "test@example.com",
-            IsActive = true,
-            DateOfBirth = new DateTime(1990, 1, 1)
-        };
+        var user = SetupUsers().First();
 
         // Act: Invokes the method under test with the arranged parameters.
         service.Delete(user);

@@ -343,10 +343,6 @@ public class UserControllerTests
             DateOfBirth = user.DateOfBirth
         };
 
-        _userService
-            .Setup(s => s.GetById(user.Id))
-            .Returns(user);
-
         // Act: Invokes the method under test with the arranged parameters.
         var result = controller.Delete(user.Id, userViewModel);
 
@@ -354,7 +350,13 @@ public class UserControllerTests
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
-        _userService.Verify(s => s.Delete(user), Times.Once);
+        _userService.Verify(s => s.Delete(It.Is<User>(u =>
+            u.Id == user.Id &&
+            u.Forename == user.Forename &&
+            u.Surname == user.Surname &&
+            u.Email == user.Email &&
+            u.IsActive == user.IsActive &&
+            u.DateOfBirth == user.DateOfBirth)), Times.Once);
     }
 
     private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
