@@ -87,12 +87,14 @@ public class ChangeLogServiceTests
         service.LogUpdate(beforeUser, afterUser);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        _dataContext.Verify(s => s.Create(It.IsAny<ChangeLogEntry>()), Times.Exactly(5)); // All 5 fields changed
+        _dataContext.Verify(s => s.Create(It.IsAny<ChangeLogEntry>()), Times.Exactly(5));
+
         _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == afterUser.Id &&
             entry.Action == ChangeActionType.Update &&
             entry.Description != null &&
             entry.Description.Contains("Forename changed from Original to Updated"))), Times.Once);
+
         _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == afterUser.Id &&
             entry.Action == ChangeActionType.Update &&
@@ -127,10 +129,10 @@ public class ChangeLogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var service = CreateService();
-        var logs = SetupChangeLogEntries();
+        SetupChangeLogEntries();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = service.GetAll(1, 2, out int totalCount);
+        var result = service.GetAll(1, 2, out var totalCount);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().HaveCount(2);
@@ -143,10 +145,10 @@ public class ChangeLogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var service = CreateService();
-        var logs = SetupChangeLogEntries();
+        SetupChangeLogEntries();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = service.GetAll(2, 2, out int totalCount);
+        var result = service.GetAll(2, 2, out var totalCount);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().HaveCount(1);
@@ -161,7 +163,7 @@ public class ChangeLogServiceTests
         var logs = SetupChangeLogEntries();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = service.GetByUser(1, 1, 10, out int totalCount);
+        var result = service.GetByUser(1, 1, 10, out var totalCount);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().HaveCount(2).And.OnlyContain(log => log.UserId == 1);
@@ -173,10 +175,10 @@ public class ChangeLogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         var service = CreateService();
-        var logs = SetupChangeLogEntries();
+        SetupChangeLogEntries();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = service.GetByUser(999, 1, 10, out int totalCount);
+        var result = service.GetByUser(999, 1, 10, out var totalCount);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeEmpty();
