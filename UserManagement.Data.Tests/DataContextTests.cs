@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using UserManagement.Models;
 
 namespace UserManagement.Data.Tests;
@@ -95,5 +96,12 @@ public class DataContextTests
         updatedEntity.Forename.Should().Be("Updated");
     }
 
-    private DataContext CreateContext() => new();
+    private static DataContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<DataContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        return new DataContext(options);
+    }
 }

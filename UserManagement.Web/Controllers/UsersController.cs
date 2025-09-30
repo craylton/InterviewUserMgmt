@@ -2,6 +2,7 @@
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
+using UserManagement.Web.Models.Logs;
 
 namespace UserManagement.WebMS.Controllers;
 
@@ -9,7 +10,13 @@ namespace UserManagement.WebMS.Controllers;
 public class UsersController : Controller
 {
     private readonly IUserService _userService;
-    public UsersController(IUserService userService) => _userService = userService;
+    private readonly IChangeLogService _changeLogService;
+
+    public UsersController(IUserService userService, IChangeLogService changeLogService)
+    {
+        _userService = userService;
+        _changeLogService = changeLogService;
+    }
 
     [HttpGet]
     public ViewResult List([FromQuery(Name = "isActive")] bool? isActive = null)
@@ -59,14 +66,14 @@ public class UsersController : Controller
     }
 
     [HttpGet("{id}")]
-    public IActionResult View(long id)
+    public IActionResult View(long id, int page = 1)
     {
         if (_userService.GetById(id) is not User user)
         {
             return NotFound();
         }
 
-        var model = new UserViewModel
+        var userViewModel = new UserViewModel
         {
             Id = user.Id,
             Forename = user.Forename,
@@ -74,6 +81,29 @@ public class UsersController : Controller
             Email = user.Email,
             IsActive = user.IsActive,
             DateOfBirth = user.DateOfBirth
+        };
+
+        var logs = _changeLogService.GetByUser(id, page, 10, out var totalCount);
+        var logItems = logs.Select(l => new LogListItemViewModel
+        {
+            Id = l.Id,
+            UserId = l.UserId,
+            Action = l.Action,
+            Timestamp = l.Timestamp
+        });
+
+        var logsViewModel = new LogListViewModel
+        {
+            Items = logItems,
+            PageNumber = page,
+            PageSize = 10,
+            TotalCount = totalCount
+        };
+
+        var model = new UserDetailsViewModel
+        {
+            User = userViewModel,
+            Logs = logsViewModel
         };
 
         return View(model);

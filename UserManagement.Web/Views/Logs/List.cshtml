@@ -1,0 +1,81 @@
+@model UserManagement.Web.Models.Logs.LogListViewModel
+@{
+    ViewData["Title"] = "Change Logs";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h1>Change Logs</h1>
+        
+        @if (Model.Items.Any())
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Action</th>
+                        <th>Timestamp</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.Items)
+                    {
+                        <tr>
+                            <td>@log.UserId</td>
+                            <td>
+                                <span class="badge @(log.Action switch 
+                                { 
+                                    UserManagement.Models.ChangeActionType.Add => "bg-success",
+                                    UserManagement.Models.ChangeActionType.Update => "bg-warning",
+                                    UserManagement.Models.ChangeActionType.Delete => "bg-danger",
+                                    _ => "bg-secondary"
+                                })">
+                                    @log.Action
+                                </span>
+                            </td>
+                            <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td>
+                                <a href="/logs/@log.Id?returnTo=@System.Web.HttpUtility.UrlEncode($"/logs?page={Model.PageNumber}")" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="Log pagination">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="/logs?page=@(Model.PageNumber - 1)">Previous</a>
+                            </li>
+                        }
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                <a class="page-link" href="/logs?page=@i">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="/logs?page=@(Model.PageNumber + 1)">Next</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <p>No change logs found.</p>
+            </div>
+        }
+    </div>
+</div>
