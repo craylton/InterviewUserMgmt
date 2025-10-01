@@ -1,27 +1,28 @@
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Interfaces;
+using UserManagement.Data.Entities;
+using UserManagement.Services.Interfaces;
+using UserManagement.Web.Controllers;
 using UserManagement.Web.Models.Users;
-using UserManagement.WebMS.Controllers;
 
-namespace UserManagement.Data.Tests;
+namespace UserManagement.Web.Tests;
 
-public class UserControllerTests
+public sealed class UsersControllerTests
 {
     [Fact]
     public void List_WhenServiceReturnsUsers_ModelMustContainUsers()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var users = SetupUsers();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.List();
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
-        result.Model
+        // Assert
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model
             .Should().BeOfType<UserListViewModel>()
             .Which.Items.Should().BeEquivalentTo(users);
     }
@@ -31,15 +32,16 @@ public class UserControllerTests
     [InlineData(false)]
     public void List_WhenServiceFiltersUsers_ModelMustContainFilteredUsers(bool isActive)
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var users = SetupUsers(isActive: isActive);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.List(isActive);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
-        result.Model
+        // Assert
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model
             .Should().BeOfType<UserListViewModel>()
             .Which.Items.Should().BeEquivalentTo(users);
     }
@@ -47,13 +49,13 @@ public class UserControllerTests
     [Fact]
     public void Add_WhenGetRequest_ReturnsViewWithEmptyUserViewModel()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Add();
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeOfType<UserViewModel>()
             .Which.Should().BeEquivalentTo(new UserViewModel());
@@ -62,7 +64,7 @@ public class UserControllerTests
     [Fact]
     public void Add_WhenValidModel_CreatesUserAndRedirectsToList()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var userViewModel = new UserViewModel
         {
@@ -74,15 +76,15 @@ public class UserControllerTests
             DateOfBirth = new DateTime(1990, 5, 15)
         };
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Add(userViewModel);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
         _userService.Verify(s => s.Create(It.Is<User>(u =>
-            u.Id == userViewModel.Id &&
+            u.Id == 0 &&
             u.Forename == userViewModel.Forename &&
             u.Surname == userViewModel.Surname &&
             u.Email == userViewModel.Email &&
@@ -93,7 +95,7 @@ public class UserControllerTests
     [Fact]
     public void Add_WhenInvalidModel_ReturnsViewWithSameModel()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var userViewModel = new UserViewModel
         {
@@ -105,10 +107,10 @@ public class UserControllerTests
         // Simulate invalid ModelState
         controller.ModelState.AddModelError("Email", "Invalid email address.");
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Add(userViewModel);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeEquivalentTo(userViewModel);
 
@@ -118,7 +120,7 @@ public class UserControllerTests
     [Fact]
     public void View_WhenUserNotFound_ReturnsNotFound()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         const long userId = 999;
 
@@ -126,10 +128,10 @@ public class UserControllerTests
             .Setup(s => s.GetById(userId))
             .Returns((User?)null);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.View(userId);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<NotFoundResult>();
 
         _userService.Verify(s => s.GetById(userId), Times.Once);
@@ -138,7 +140,7 @@ public class UserControllerTests
     [Fact]
     public void View_WhenUserExists_ReturnsViewWithUserDetailsViewModel()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
         var logs = new[]
@@ -158,14 +160,14 @@ public class UserControllerTests
                 return logs;
             });
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.View(user.Id);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<ViewResult>();
         var viewResult = (ViewResult)result;
         viewResult.Model.Should().BeOfType<UserDetailsViewModel>();
-        
+
         var model = (UserDetailsViewModel)viewResult.Model!;
         model.User.Should().BeEquivalentTo(new UserViewModel
         {
@@ -176,7 +178,7 @@ public class UserControllerTests
             IsActive = user.IsActive,
             DateOfBirth = user.DateOfBirth
         });
-        
+
         model.Logs.Items.Should().HaveCount(1);
         model.Logs.TotalCount.Should().Be(1);
 
@@ -187,7 +189,7 @@ public class UserControllerTests
     [Fact]
     public void Edit_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
 
@@ -195,10 +197,10 @@ public class UserControllerTests
             .Setup(s => s.GetById(user.Id))
             .Returns(user);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Edit(user.Id);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeOfType<UserViewModel>()
             .Which.Should().BeEquivalentTo(new UserViewModel
@@ -217,7 +219,7 @@ public class UserControllerTests
     [Fact]
     public void Edit_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         const long userId = 999;
 
@@ -225,10 +227,10 @@ public class UserControllerTests
             .Setup(s => s.GetById(userId))
             .Returns((User?)null);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Edit(userId);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<NotFoundResult>();
 
         _userService.Verify(s => s.GetById(userId), Times.Once);
@@ -237,7 +239,7 @@ public class UserControllerTests
     [Fact]
     public void Edit_WhenPostRequest_AndValidModel_UpdatesUserAndRedirectsToList()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var existingUser = SetupUsers().First();
         var userViewModel = new UserViewModel
@@ -254,10 +256,10 @@ public class UserControllerTests
             .Setup(s => s.GetById(existingUser.Id))
             .Returns(existingUser);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Edit(existingUser.Id, userViewModel);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
@@ -273,7 +275,7 @@ public class UserControllerTests
     [Fact]
     public void Edit_WhenPostRequest_AndInvalidModel_ReturnsViewWithSameModel()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         const long userId = 1;
         var userViewModel = new UserViewModel
@@ -286,10 +288,10 @@ public class UserControllerTests
         // Simulate invalid ModelState
         controller.ModelState.AddModelError("Email", "Invalid email address.");
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Edit(userId, userViewModel);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeEquivalentTo(userViewModel);
 
@@ -299,7 +301,7 @@ public class UserControllerTests
     [Fact]
     public void Delete_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
 
@@ -307,10 +309,10 @@ public class UserControllerTests
             .Setup(s => s.GetById(user.Id))
             .Returns(user);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Delete(user.Id);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeOfType<UserViewModel>()
             .Which.Should().BeEquivalentTo(new UserViewModel
@@ -329,7 +331,7 @@ public class UserControllerTests
     [Fact]
     public void Delete_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         const long userId = 999;
 
@@ -337,10 +339,10 @@ public class UserControllerTests
             .Setup(s => s.GetById(userId))
             .Returns((User?)null);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = controller.Delete(userId);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeOfType<NotFoundResult>();
 
         _userService.Verify(s => s.GetById(userId), Times.Once);
@@ -349,23 +351,18 @@ public class UserControllerTests
     [Fact]
     public void Delete_WhenPostRequest_DeletesUserAndRedirectsToList()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
-        var userViewModel = new UserViewModel
-        {
-            Id = user.Id,
-            Forename = user.Forename,
-            Surname = user.Surname,
-            Email = user.Email,
-            IsActive = user.IsActive,
-            DateOfBirth = user.DateOfBirth
-        };
 
-        // Act: Invokes the method under test with the arranged parameters.
-        var result = controller.Delete(user.Id, userViewModel);
+        _userService
+            .Setup(s => s.GetById(user.Id))
+            .Returns(user);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Act
+        var result = controller.PostDelete(user.Id);
+
+        // Assert
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
@@ -378,7 +375,28 @@ public class UserControllerTests
             u.DateOfBirth == user.DateOfBirth)), Times.Once);
     }
 
-    private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
+    [Fact]
+    public void Delete_WhenPostRequest_AndUserNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var controller = CreateController();
+        const long userId = 999;
+
+        _userService
+            .Setup(s => s.GetById(userId))
+            .Returns((User?)null);
+
+        // Act
+        var result = controller.PostDelete(userId);
+
+        // Assert
+        result.Should().BeOfType<NotFoundResult>();
+
+        _userService.Verify(s => s.GetById(userId), Times.Once);
+        _userService.Verify(s => s.Delete(It.IsAny<User>()), Times.Never);
+    }
+
+    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
     {
         var users = new[]
         {
@@ -391,7 +409,7 @@ public class UserControllerTests
                 IsActive = isActive,
                 DateOfBirth = new DateTime(1990, 1, 15)
             }
-        };
+        }.AsQueryable();
 
         _userService
             .Setup(s => s.GetAll())

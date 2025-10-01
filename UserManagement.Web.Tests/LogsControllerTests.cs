@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Interfaces;
-using UserManagement.WebMS.Controllers;
 using UserManagement.Web.Models.Logs;
+using UserManagement.Services.Interfaces;
+using UserManagement.Web.Controllers;
+using UserManagement.Data.Entities;
 
 namespace UserManagement.Web.Tests;
 
-public class LogsControllerTests
+public sealed class LogsControllerTests
 {
     [Fact]
     public void List_WhenLogsExist_ShouldReturnViewWithLogListViewModel()
@@ -32,10 +32,10 @@ public class LogsControllerTests
         var result = controller.List(1);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
-        result.Model.Should().BeOfType<LogListViewModel>();
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model.Should().BeOfType<LogListViewModel>();
 
-        var model = (LogListViewModel)result.Model!;
+        var model = (LogListViewModel)viewResult.Model!;
         model.Items.Should().HaveCount(2);
         model.PageNumber.Should().Be(1);
         model.PageSize.Should().Be(10);
@@ -59,10 +59,10 @@ public class LogsControllerTests
         var result = controller.List(1);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
-        result.Model.Should().BeOfType<LogListViewModel>();
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model.Should().BeOfType<LogListViewModel>();
 
-        var model = (LogListViewModel)result.Model!;
+        var model = (LogListViewModel)viewResult.Model!;
         model.Items.Should().BeEmpty();
         model.TotalCount.Should().Be(0);
     }

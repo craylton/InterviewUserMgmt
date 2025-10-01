@@ -1,11 +1,10 @@
 using System;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using UserManagement.Models;
+using UserManagement.Data.Entities;
 
 namespace UserManagement.Data.Tests;
 
-public class ChangeLogEntryTests
+public sealed class ChangeLogEntryTests
 {
     [Fact]
     public void Create_WhenNewChangeLogEntry_ShouldAssignId()
@@ -49,7 +48,7 @@ public class ChangeLogEntryTests
         context.Create(changeLogEntry2);
 
         // Act
-        var result = context.GetAll<ChangeLogEntry>().ToList();
+        var result = context.GetAll<ChangeLogEntry>();
 
         // Assert
         result.Should().HaveCount(2);
@@ -107,7 +106,7 @@ public class ChangeLogEntryTests
 
         // Act
         changeLogEntry.Description = "Updated description";
-        context.Update(changeLogEntry);
+        context.UpdateAndSave(changeLogEntry);
 
         // Assert
         var result = context.GetById<ChangeLogEntry>(changeLogEntry.Id);

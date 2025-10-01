@@ -1,28 +1,21 @@
 ﻿using System.Linq;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 using UserManagement.Web.Models.Logs;
+using UserManagement.Services.Interfaces;
+using UserManagement.Data.Entities;
 
-namespace UserManagement.WebMS.Controllers;
+namespace UserManagement.Web.Controllers;
 
 [Route("users")]
-public class UsersController : Controller
+public class UsersController(IUserService userService, IChangeLogService changeLogService) : Controller
 {
-    private readonly IUserService _userService;
-    private readonly IChangeLogService _changeLogService;
-
-    public UsersController(IUserService userService, IChangeLogService changeLogService)
-    {
-        _userService = userService;
-        _changeLogService = changeLogService;
-    }
+    private const int _defaultPageSize = 10;
 
     [HttpGet]
-    public ViewResult List([FromQuery(Name = "isActive")] bool? isActive = null)
+    public IActionResult List([FromQuery(Name = "isActive")] bool? isActive = null)
     {
-        var filteredUsers = isActive.HasValue ? _userService.FilterByActive(isActive.Value) : _userService.GetAll();
-        var items = filteredUsers.Select(p => new UserListItemViewModel
+        var filteredUsers = isActive.HasValue ? userService.FilterByActive(isActive.Value) : userService.GetAll();
+        var items = filteredUsers.Select(p => new UserViewModel
         {
             Id = p.Id,
             Forename = p.Forename,
@@ -34,7 +27,7 @@ public class UsersController : Controller
 
         var model = new UserListViewModel
         {
-            Items = items.ToList()
+            Items = [.. items]
         };
 
         return View(model);
@@ -44,6 +37,7 @@ public class UsersController : Controller
     public IActionResult Add() => View(new UserViewModel());
 
     [HttpPost("add")]
+    [ValidateAntiForgeryToken]
     public IActionResult Add(UserViewModel model)
     {
         if (!ModelState.IsValid)
@@ -53,7 +47,6 @@ public class UsersController : Controller
 
         var user = new User
         {
-            Id = model.Id,
             Forename = model.Forename,
             Surname = model.Surname,
             Email = model.Email,
@@ -61,14 +54,14 @@ public class UsersController : Controller
             DateOfBirth = model.DateOfBirth
         };
 
-        _userService.Create(user);
+        userService.Create(user);
         return RedirectToAction(nameof(List));
     }
 
     [HttpGet("{id}")]
     public IActionResult View(long id, int page = 1)
     {
-        if (_userService.GetById(id) is not User user)
+        if (userService.GetById(id) is not User user)
         {
             return NotFound();
         }
@@ -83,7 +76,7 @@ public class UsersController : Controller
             DateOfBirth = user.DateOfBirth
         };
 
-        var logs = _changeLogService.GetByUser(id, page, 10, out var totalCount);
+        var logs = changeLogService.GetByUser(id, page, _defaultPageSize, out var totalCount);
         var logItems = logs.Select(l => new LogListItemViewModel
         {
             Id = l.Id,
@@ -96,7 +89,7 @@ public class UsersController : Controller
         {
             Items = logItems,
             PageNumber = page,
-            PageSize = 10,
+            PageSize = _defaultPageSize,
             TotalCount = totalCount
         };
 
@@ -112,7 +105,7 @@ public class UsersController : Controller
     [HttpGet("edit/{id}")]
     public IActionResult Edit(long id)
     {
-        if (_userService.GetById(id) is not User user)
+        if (userService.GetById(id) is not User user)
         {
             return NotFound();
         }
@@ -131,6 +124,7 @@ public class UsersController : Controller
     }
 
     [HttpPost("edit/{id}")]
+    [ValidateAntiForgeryToken]
     public IActionResult Edit(long id, UserViewModel model)
     {
         if (!ModelState.IsValid)
@@ -148,14 +142,14 @@ public class UsersController : Controller
             DateOfBirth = model.DateOfBirth
         };
 
-        _userService.Update(user);
+        userService.Update(user);
         return RedirectToAction(nameof(List));
     }
 
     [HttpGet("delete/{id}")]
     public IActionResult Delete(long id)
     {
-        if (_userService.GetById(id) is not User user)
+        if (userService.GetById(id) is not User user)
         {
             return NotFound();
         }
@@ -174,19 +168,15 @@ public class UsersController : Controller
     }
 
     [HttpPost("delete/{id}")]
-    public IActionResult Delete(long id, UserViewModel model)
+    [ValidateAntiForgeryToken]
+    public IActionResult PostDelete(long id)
     {
-        var user = new User
+        if (userService.GetById(id) is not User user)
         {
-            Id = model.Id,
-            Forename = model.Forename,
-            Surname = model.Surname,
-            Email = model.Email,
-            IsActive = model.IsActive,
-            DateOfBirth = model.DateOfBirth
-        };
+            return NotFound();
+        }
 
-        _userService.Delete(user);
+        userService.Delete(user);
         return RedirectToAction(nameof(List));
     }
 }

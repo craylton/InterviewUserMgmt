@@ -2,13 +2,13 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace UserManagement.Models;
+namespace UserManagement.Data.Entities;
 
 public enum ChangeActionType
 {
-    Add = 0,
-    Update = 1,
-    Delete = 2
+    Add,
+    Update,
+    Delete
 }
 
 public class ChangeLogEntry

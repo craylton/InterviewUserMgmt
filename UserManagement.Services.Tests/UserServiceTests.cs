@@ -1,47 +1,48 @@
 using System;
 using System.Linq;
-using UserManagement.Models;
-using UserManagement.Services.Domain.Implementations;
-using UserManagement.Services.Domain.Interfaces;
+using UserManagement.Data;
+using UserManagement.Data.Entities;
+using UserManagement.Services.Implementations;
+using UserManagement.Services.Interfaces;
 
-namespace UserManagement.Data.Tests;
+namespace UserManagement.Services.Tests;
 
-public class UserServiceTests
+public sealed class UserServiceTests
 {
     [Fact]
-    public void GetAll_WhenContextReturnsEntities_MustReturnSameEntities()
+    public void GetAll_WhenContextReturnsEntities_ShouldReturnSameEntities()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var users = SetupUsers();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetAll();
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeSameAs(users);
     }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void FilterByActive_WhenFilteringByActiveState_MustReturnOnlyUsersMatchingActiveState(bool isActive)
+    public void FilterByActive_WhenFilteringByActiveState_ShouldReturnOnlyUsersMatchingActiveState(bool isActive)
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var users = SetupUsers();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.FilterByActive(isActive);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
-        result.Should().HaveCount(1).And.OnlyContain(u => u.IsActive == isActive);
+        // Assert
+        result.Should().ContainSingle(u => u.IsActive == isActive);
     }
 
     [Fact]
-    public void Create_WhenCreatingUser_MustCallDataContextCreate()
+    public void Create_WhenCreatingUser_ShouldCallDataContextCreate()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var user = new User
         {
@@ -52,49 +53,49 @@ public class UserServiceTests
             DateOfBirth = new DateTime(1990, 1, 1)
         };
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         service.Create(user);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         _dataContext.Verify(s => s.Create(user), Times.Once);
         _changeLogService.Verify(s => s.LogAdd(user), Times.Once);
     }
 
     [Fact]
-    public void GetByIdAsync_ExistingUser_ReturnsUser()
+    public void GetById_ExistingUser_ReturnsUser()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var user = SetupUsers().First();
         _dataContext.Setup(s => s.GetById<User>(1L)).Returns(user);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetById(1);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(user);
         _dataContext.Verify(s => s.GetById<User>(1L), Times.Once);
     }
 
     [Fact]
-    public void GetByIdAsync_NonExistentUser_ReturnsNull()
+    public void GetById_NonExistentUser_ReturnsNull()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         _dataContext.Setup(s => s.GetById<User>(999L)).Returns((User?)null);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         var result = service.GetById(999);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         result.Should().BeNull();
         _dataContext.Verify(s => s.GetById<User>(999L), Times.Once);
     }
 
     [Fact]
-    public void Update_WhenUpdatingUser_MustCallDataContextUpdate()
+    public void Update_WhenUpdatingUser_ShouldCallDataContextUpdate()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var existingUser = new User
         {
@@ -114,43 +115,42 @@ public class UserServiceTests
             IsActive = false,
             DateOfBirth = new DateTime(1985, 5, 15)
         };
-        
-        // Setup GetAll to return the existing user for comparison
-        var users = new[] { existingUser }.AsQueryable();
-        _dataContext.Setup(s => s.GetAll<User>()).Returns(users);
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Setup GetByIdNoTracking to return the existing user for comparison
+        _dataContext.Setup(s => s.GetByIdNoTracking<User>(1L)).Returns(existingUser);
+
+        // Act
         service.Update(updatedUser);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
-        _dataContext.Verify(s => s.Update(updatedUser), Times.Once);
+        // Assert
+        _dataContext.Verify(s => s.UpdateAndSave(updatedUser), Times.Once);
         _changeLogService.Verify(s => s.LogUpdate(existingUser, updatedUser), Times.Once);
     }
 
     [Fact]
-    public void Delete_WhenDeletingUser_MustCallDataContextDelete()
+    public void Delete_WhenDeletingUser_ShouldCallDataContextDelete()
     {
-        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        // Arrange
         var service = CreateService();
         var user = SetupUsers().First();
 
-        // Act: Invokes the method under test with the arranged parameters.
+        // Act
         service.Delete(user);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
+        // Assert
         _changeLogService.Verify(s => s.LogDelete(user), Times.Once);
         _dataContext.Verify(s => s.Delete(user), Times.Once);
     }
 
-    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com")
+    private IQueryable<User> SetupUsers()
     {
         var users = new[]
         {
             new User
             {
-                Forename = forename,
-                Surname = surname,
-                Email = email,
+                Forename = "Johnny",
+                Surname = "User",
+                Email = "juser@example.com",
                 IsActive = true,
                 DateOfBirth = new DateTime(1990, 1, 15)
             },

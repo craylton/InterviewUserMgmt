@@ -1,20 +1,18 @@
 using System.Linq;
-using UserManagement.Services.Domain.Interfaces;
+using UserManagement.Services.Interfaces;
 using UserManagement.Web.Models.Logs;
 
-namespace UserManagement.WebMS.Controllers;
+namespace UserManagement.Web.Controllers;
 
 [Route("logs")]
-public class LogsController : Controller
+public class LogsController(IChangeLogService changeLogService) : Controller
 {
-    private readonly IChangeLogService _changeLogService;
-
-    public LogsController(IChangeLogService changeLogService) => _changeLogService = changeLogService;
+    private const int _defaultPageSize = 10;
 
     [HttpGet]
-    public ViewResult List(int page = 1)
+    public IActionResult List(int page = 1)
     {
-        var logs = _changeLogService.GetAll(page, 10, out var totalCount);
+        var logs = changeLogService.GetAll(page, _defaultPageSize, out var totalCount);
 
         var items = logs.Select(l => new LogListItemViewModel
         {
@@ -28,7 +26,7 @@ public class LogsController : Controller
         {
             Items = items,
             PageNumber = page,
-            PageSize = 10,
+            PageSize = _defaultPageSize,
             TotalCount = totalCount
         };
 
@@ -38,7 +36,7 @@ public class LogsController : Controller
     [HttpGet("{id}")]
     public IActionResult View(long id, string? returnTo = null)
     {
-        var log = _changeLogService.GetById(id);
+        var log = changeLogService.GetById(id);
 
         if (log is null)
         {

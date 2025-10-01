@@ -1,4 +1,8 @@
-﻿@model UserManagement.Web.Models.Users.UserDetailsViewModel
+﻿@using UserManagement.Data.Entities
+@model UserManagement.Web.Models.Users.UserDetailsViewModel
+@{
+    ViewData["Title"] = "View User";
+}
 
 <h2>View User</h2>
 
@@ -55,7 +59,7 @@
 <div class="row mt-4">
     <div class="col-12">
         <h3>Change History</h3>
-        
+
         @if (Model.Logs.Items.Any())
         {
             <table class="table table-sm table-striped">
@@ -71,11 +75,11 @@
                     {
                         <tr>
                             <td>
-                                <span class="badge @(log.Action switch 
-                                { 
-                                    UserManagement.Models.ChangeActionType.Add => "bg-success",
-                                    UserManagement.Models.ChangeActionType.Update => "bg-warning",
-                                    UserManagement.Models.ChangeActionType.Delete => "bg-danger",
+                                <span class="badge @(log.Action switch
+                                {
+                                    ChangeActionType.Add => "bg-success",
+                                    ChangeActionType.Update => "bg-warning",
+                                    ChangeActionType.Delete => "bg-danger",
                                     _ => "bg-secondary"
                                 })">
                                     @log.Action

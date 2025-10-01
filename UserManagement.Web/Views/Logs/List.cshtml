@@ -1,3 +1,4 @@
+@using UserManagement.Data.Entities
 @model UserManagement.Web.Models.Logs.LogListViewModel
 @{
     ViewData["Title"] = "Change Logs";
@@ -6,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <h1>Change Logs</h1>
-        
+
         @if (Model.Items.Any())
         {
             <table class="table table-striped">
@@ -24,11 +25,11 @@
                         <tr>
                             <td>@log.UserId</td>
                             <td>
-                                <span class="badge @(log.Action switch 
-                                { 
-                                    UserManagement.Models.ChangeActionType.Add => "bg-success",
-                                    UserManagement.Models.ChangeActionType.Update => "bg-warning",
-                                    UserManagement.Models.ChangeActionType.Delete => "bg-danger",
+                                <span class="badge @(log.Action switch
+                                {
+                                    ChangeActionType.Add => "bg-success",
+                                    ChangeActionType.Update => "bg-warning",
+                                    ChangeActionType.Delete => "bg-danger",
                                     _ => "bg-secondary"
                                 })">
                                     @log.Action

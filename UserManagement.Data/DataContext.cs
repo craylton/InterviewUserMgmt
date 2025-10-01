@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using UserManagement.Models;
+using UserManagement.Data.Entities;
 
 namespace UserManagement.Data;
 
@@ -19,8 +19,8 @@ public class DataContext : DbContext, IDataContext
 
     protected override void OnModelCreating(ModelBuilder model)
     {
-        model.Entity<User>().HasData(new[]
-        {
+        model.Entity<User>().HasData(
+        [
             new User { Id = 1, Forename = "Peter", Surname = "Loew", Email = "ploew@example.com", IsActive = true, DateOfBirth = new DateTime(1985, 3, 15) },
             new User { Id = 2, Forename = "Benjamin Franklin", Surname = "Gates", Email = "bfgates@example.com", IsActive = true, DateOfBirth = new DateTime(1976, 7, 22) },
             new User { Id = 3, Forename = "Castor", Surname = "Troy", Email = "ctroy@example.com", IsActive = false, DateOfBirth = new DateTime(1962, 11, 8) },
@@ -32,15 +32,15 @@ public class DataContext : DbContext, IDataContext
             new User { Id = 9, Forename = "Damon", Surname = "Macready", Email = "dmacready@example.com", IsActive = false, DateOfBirth = new DateTime(1958, 10, 14) },
             new User { Id = 10, Forename = "Johnny", Surname = "Blaze", Email = "jblaze@example.com", IsActive = true, DateOfBirth = new DateTime(1972, 2, 19) },
             new User { Id = 11, Forename = "Robin", Surname = "Feld", Email = "rfeld@example.com", IsActive = true, DateOfBirth = new DateTime(1966, 8, 3) },
-        });
+        ]);
 
         // Configure ChangeLogEntry to NOT have a foreign key relationship
         // This allows logs to persist even when the referenced user is deleted
         model.Entity<ChangeLogEntry>().Ignore(c => c.User);
     }
 
-    public DbSet<User>? Users { get; set; }
-    public DbSet<ChangeLogEntry>? ChangeLogs { get; set; }
+    public DbSet<User> Users { get; set; } = default!;
+    public DbSet<ChangeLogEntry> ChangeLogs { get; set; } = default!;
 
     public IQueryable<TEntity> GetAll<TEntity>() where TEntity : class
         => base.Set<TEntity>();
@@ -51,7 +51,7 @@ public class DataContext : DbContext, IDataContext
         SaveChanges();
     }
 
-    public new void Update<TEntity>(TEntity entity) where TEntity : class
+    public void UpdateAndSave<TEntity>(TEntity entity) where TEntity : class
     {
         base.Update(entity);
         SaveChanges();
@@ -62,6 +62,10 @@ public class DataContext : DbContext, IDataContext
         base.Remove(entity);
         SaveChanges();
     }
+
     public TEntity? GetById<TEntity>(long id) where TEntity : class
         => base.Set<TEntity>().Find(id);
+
+    public TEntity? GetByIdNoTracking<TEntity>(long id) where TEntity : class
+        => base.Set<TEntity>().AsNoTracking().FirstOrDefault(e => EF.Property<long>(e, "Id") == id);
 }
