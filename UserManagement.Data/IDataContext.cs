@@ -8,7 +8,7 @@ public interface IDataContext
 
     void Create<TEntity>(TEntity entity) where TEntity : class;
 
-    void Update<TEntity>(TEntity entity) where TEntity : class;
+    void UpdateAndSave<TEntity>(TEntity entity) where TEntity : class;
 
     void Delete<TEntity>(TEntity entity) where TEntity : class;
 

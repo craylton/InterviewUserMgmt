@@ -124,7 +124,7 @@ public sealed class UserServiceTests
         service.Update(updatedUser);
 
         // Assert
-        _dataContext.Verify(s => s.Update(updatedUser), Times.Once);
+        _dataContext.Verify(s => s.UpdateAndSave(updatedUser), Times.Once);
         _changeLogService.Verify(s => s.LogUpdate(existingUser, updatedUser), Times.Once);
     }
 

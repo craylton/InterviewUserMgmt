@@ -90,7 +90,7 @@ public sealed class UserTests
         entity.Forename = "Updated";
 
         // Act
-        context.Update(entity);
+        context.UpdateAndSave(entity);
 
         // Assert
         // Detach to ensure we re-query from the store rather than returning the tracked instance

@@ -39,8 +39,8 @@ public class DataContext : DbContext, IDataContext
         model.Entity<ChangeLogEntry>().Ignore(c => c.User);
     }
 
-    public DbSet<User>? Users { get; set; }
-    public DbSet<ChangeLogEntry>? ChangeLogs { get; set; }
+    public DbSet<User> Users { get; set; } = default!;
+    public DbSet<ChangeLogEntry> ChangeLogs { get; set; } = default!;
 
     public IQueryable<TEntity> GetAll<TEntity>() where TEntity : class
         => base.Set<TEntity>();
@@ -51,7 +51,7 @@ public class DataContext : DbContext, IDataContext
         SaveChanges();
     }
 
-    public new void Update<TEntity>(TEntity entity) where TEntity : class
+    public void UpdateAndSave<TEntity>(TEntity entity) where TEntity : class
     {
         base.Update(entity);
         SaveChanges();

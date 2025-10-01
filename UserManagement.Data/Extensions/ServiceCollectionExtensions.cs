@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using UserManagement.Data;
 
 namespace UserManagement.Data.Extensions;
 

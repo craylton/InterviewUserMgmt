@@ -32,7 +32,7 @@ public class UserService(IDataContext dataAccess, IChangeLogService changeLogSer
             .AsNoTracking()
             .FirstOrDefault(u => u.Id == user.Id);
 
-        _dataAccess.Update(user);
+        _dataAccess.UpdateAndSave(user);
 
         if (existing is not null)
         {

@@ -106,7 +106,7 @@ public sealed class ChangeLogEntryTests
 
         // Act
         changeLogEntry.Description = "Updated description";
-        context.Update(changeLogEntry);
+        context.UpdateAndSave(changeLogEntry);
 
         // Assert
         var result = context.GetById<ChangeLogEntry>(changeLogEntry.Id);
