@@ -21,7 +21,8 @@ public sealed class UsersControllerTests
         var result = controller.List();
 
         // Assert
-        result.Model
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model
             .Should().BeOfType<UserListViewModel>()
             .Which.Items.Should().BeEquivalentTo(users);
     }
@@ -39,7 +40,8 @@ public sealed class UsersControllerTests
         var result = controller.List(isActive);
 
         // Assert
-        result.Model
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model
             .Should().BeOfType<UserListViewModel>()
             .Which.Items.Should().BeEquivalentTo(users);
     }
@@ -82,7 +84,7 @@ public sealed class UsersControllerTests
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
         _userService.Verify(s => s.Create(It.Is<User>(u =>
-            u.Id == userViewModel.Id &&
+            u.Id == 0 &&
             u.Forename == userViewModel.Forename &&
             u.Surname == userViewModel.Surname &&
             u.Email == userViewModel.Email &&
@@ -352,18 +354,13 @@ public sealed class UsersControllerTests
         // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
-        var userViewModel = new UserViewModel
-        {
-            Id = user.Id,
-            Forename = user.Forename,
-            Surname = user.Surname,
-            Email = user.Email,
-            IsActive = user.IsActive,
-            DateOfBirth = user.DateOfBirth
-        };
+
+        _userService
+            .Setup(s => s.GetById(user.Id))
+            .Returns(user);
 
         // Act
-        var result = controller.Delete(user.Id, userViewModel);
+        var result = controller.PostDelete(user.Id);
 
         // Assert
         result.Should().BeOfType<RedirectToActionResult>()
@@ -376,6 +373,27 @@ public sealed class UsersControllerTests
             u.Email == user.Email &&
             u.IsActive == user.IsActive &&
             u.DateOfBirth == user.DateOfBirth)), Times.Once);
+    }
+
+    [Fact]
+    public void Delete_WhenPostRequest_AndUserNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var controller = CreateController();
+        const long userId = 999;
+
+        _userService
+            .Setup(s => s.GetById(userId))
+            .Returns((User?)null);
+
+        // Act
+        var result = controller.PostDelete(userId);
+
+        // Assert
+        result.Should().BeOfType<NotFoundResult>();
+
+        _userService.Verify(s => s.GetById(userId), Times.Once);
+        _userService.Verify(s => s.Delete(It.IsAny<User>()), Times.Never);
     }
 
     private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)

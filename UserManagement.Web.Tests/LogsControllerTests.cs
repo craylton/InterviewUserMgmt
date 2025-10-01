@@ -32,10 +32,10 @@ public sealed class LogsControllerTests
         var result = controller.List(1);
 
         // Assert
-        result.Should().BeOfType<ViewResult>()
-            .Which.Model.Should().BeOfType<LogListViewModel>();
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model.Should().BeOfType<LogListViewModel>();
 
-        var model = (LogListViewModel)result.Model!;
+        var model = (LogListViewModel)viewResult.Model!;
         model.Items.Should().HaveCount(2);
         model.PageNumber.Should().Be(1);
         model.PageSize.Should().Be(10);
@@ -59,10 +59,10 @@ public sealed class LogsControllerTests
         var result = controller.List(1);
 
         // Assert
-        result.Should().BeOfType<ViewResult>()
-            .Which.Model.Should().BeOfType<LogListViewModel>();
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        viewResult.Model.Should().BeOfType<LogListViewModel>();
 
-        var model = (LogListViewModel)result.Model!;
+        var model = (LogListViewModel)viewResult.Model!;
         model.Items.Should().BeEmpty();
         model.TotalCount.Should().Be(0);
     }
