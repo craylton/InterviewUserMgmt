@@ -8,7 +8,7 @@ using UserManagement.Data.Entities;
 
 namespace UserManagement.Web.Tests;
 
-public class LogsControllerTests
+public sealed class LogsControllerTests
 {
     [Fact]
     public void List_WhenLogsExist_ShouldReturnViewWithLogListViewModel()
@@ -32,8 +32,8 @@ public class LogsControllerTests
         var result = controller.List(1);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
-        result.Model.Should().BeOfType<LogListViewModel>();
+        result.Should().BeOfType<ViewResult>()
+            .Which.Model.Should().BeOfType<LogListViewModel>();
 
         var model = (LogListViewModel)result.Model!;
         model.Items.Should().HaveCount(2);
@@ -59,8 +59,8 @@ public class LogsControllerTests
         var result = controller.List(1);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
-        result.Model.Should().BeOfType<LogListViewModel>();
+        result.Should().BeOfType<ViewResult>()
+            .Which.Model.Should().BeOfType<LogListViewModel>();
 
         var model = (LogListViewModel)result.Model!;
         model.Items.Should().BeEmpty();

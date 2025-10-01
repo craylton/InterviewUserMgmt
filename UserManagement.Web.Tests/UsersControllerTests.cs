@@ -8,7 +8,7 @@ using UserManagement.Web.Models.Users;
 
 namespace UserManagement.Web.Tests;
 
-public class UserControllerTests
+public sealed class UsersControllerTests
 {
     [Fact]
     public void List_WhenServiceReturnsUsers_ModelMustContainUsers()
@@ -165,7 +165,7 @@ public class UserControllerTests
         result.Should().BeOfType<ViewResult>();
         var viewResult = (ViewResult)result;
         viewResult.Model.Should().BeOfType<UserDetailsViewModel>();
-        
+
         var model = (UserDetailsViewModel)viewResult.Model!;
         model.User.Should().BeEquivalentTo(new UserViewModel
         {
@@ -176,7 +176,7 @@ public class UserControllerTests
             IsActive = user.IsActive,
             DateOfBirth = user.DateOfBirth
         });
-        
+
         model.Logs.Items.Should().HaveCount(1);
         model.Logs.TotalCount.Should().Be(1);
 

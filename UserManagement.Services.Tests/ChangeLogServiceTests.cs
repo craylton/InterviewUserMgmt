@@ -6,7 +6,7 @@ using UserManagement.Services.Implementations;
 
 namespace UserManagement.Services.Tests;
 
-public class ChangeLogServiceTests
+public sealed class ChangeLogServiceTests
 {
     [Fact]
     public void LogAdd_WhenLoggingUserAdd_MustCallDataContextCreate()
@@ -136,9 +136,8 @@ public class ChangeLogServiceTests
         var result = service.GetAll(1, 2, out var totalCount);
 
         // Assert
-        result.Should().HaveCount(2);
         totalCount.Should().Be(3);
-        result.First().Timestamp.Should().BeAfter(result.Last().Timestamp);
+        result.Should().HaveCount(2).And.BeInDescendingOrder(log => log.Timestamp);
     }
 
     [Fact]
@@ -161,7 +160,7 @@ public class ChangeLogServiceTests
     {
         // Arrange
         var service = CreateService();
-        var logs = SetupChangeLogEntries();
+        SetupChangeLogEntries();
 
         // Act
         var result = service.GetByUser(1, 1, 10, out var totalCount);

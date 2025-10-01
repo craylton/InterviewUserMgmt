@@ -7,10 +7,10 @@ using UserManagement.Services.Interfaces;
 
 namespace UserManagement.Services.Tests;
 
-public class UserServiceTests
+public sealed class UserServiceTests
 {
     [Fact]
-    public void GetAll_WhenContextReturnsEntities_MustReturnSameEntities()
+    public void GetAll_WhenContextReturnsEntities_ShouldReturnSameEntities()
     {
         // Arrange
         var service = CreateService();
@@ -26,7 +26,7 @@ public class UserServiceTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void FilterByActive_WhenFilteringByActiveState_MustReturnOnlyUsersMatchingActiveState(bool isActive)
+    public void FilterByActive_WhenFilteringByActiveState_ShouldReturnOnlyUsersMatchingActiveState(bool isActive)
     {
         // Arrange
         var service = CreateService();
@@ -36,11 +36,11 @@ public class UserServiceTests
         var result = service.FilterByActive(isActive);
 
         // Assert
-        result.Should().HaveCount(1).And.OnlyContain(u => u.IsActive == isActive);
+        result.Should().ContainSingle(u => u.IsActive == isActive);
     }
 
     [Fact]
-    public void Create_WhenCreatingUser_MustCallDataContextCreate()
+    public void Create_WhenCreatingUser_ShouldCallDataContextCreate()
     {
         // Arrange
         var service = CreateService();
@@ -62,7 +62,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public void GetByIdAsync_ExistingUser_ReturnsUser()
+    public void GetById_ExistingUser_ReturnsUser()
     {
         // Arrange
         var service = CreateService();
@@ -78,7 +78,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public void GetByIdAsync_NonExistentUser_ReturnsNull()
+    public void GetById_NonExistentUser_ReturnsNull()
     {
         // Arrange
         var service = CreateService();
@@ -93,7 +93,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public void Update_WhenUpdatingUser_MustCallDataContextUpdate()
+    public void Update_WhenUpdatingUser_ShouldCallDataContextUpdate()
     {
         // Arrange
         var service = CreateService();
@@ -115,7 +115,7 @@ public class UserServiceTests
             IsActive = false,
             DateOfBirth = new DateTime(1985, 5, 15)
         };
-        
+
         // Setup GetAll to return the existing user for comparison
         var users = new[] { existingUser }.AsQueryable();
         _dataContext.Setup(s => s.GetAll<User>()).Returns(users);
@@ -129,7 +129,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public void Delete_WhenDeletingUser_MustCallDataContextDelete()
+    public void Delete_WhenDeletingUser_ShouldCallDataContextDelete()
     {
         // Arrange
         var service = CreateService();
@@ -143,15 +143,15 @@ public class UserServiceTests
         _dataContext.Verify(s => s.Delete(user), Times.Once);
     }
 
-    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com")
+    private IQueryable<User> SetupUsers()
     {
         var users = new[]
         {
             new User
             {
-                Forename = forename,
-                Surname = surname,
-                Email = email,
+                Forename = "Johnny",
+                Surname = "User",
+                Email = "juser@example.com",
                 IsActive = true,
                 DateOfBirth = new DateTime(1990, 1, 15)
             },

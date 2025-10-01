@@ -5,13 +5,13 @@ using UserManagement.Data.Entities;
 
 namespace UserManagement.Data.Tests;
 
-public class DataContextTests
+public sealed class UserTests
 {
     [Fact]
-    public void GetAll_WhenNewEntityAdded_MustIncludeNewEntity()
+    public void GetAll_WhenNewEntityAdded_ShouldIncludeNewEntity()
     {
         // Arrange
-        var context = CreateContext();
+        using var context = CreateContext();
 
         var entity = new User
         {
@@ -33,10 +33,10 @@ public class DataContextTests
     }
 
     [Fact]
-    public void GetAll_WhenDeleted_MustNotIncludeDeletedEntity()
+    public void GetAll_WhenDeleted_ShouldNotIncludeDeletedEntity()
     {
         // Arrange
-        var context = CreateContext();
+        using var context = CreateContext();
         var entity = context.GetAll<User>().First();
         context.Delete(entity);
 
@@ -48,10 +48,10 @@ public class DataContextTests
     }
 
     [Fact]
-    public void GetById_WhenEntityExists_MustReturnEntity()
+    public void GetById_WhenEntityExists_ShouldReturnEntity()
     {
         // Arrange
-        var context = CreateContext();
+        using var context = CreateContext();
         var entity = context.GetAll<User>().First();
 
         // Act
@@ -62,10 +62,10 @@ public class DataContextTests
     }
 
     [Fact]
-    public void GetById_WhenEntityDoesNotExist_MustReturnNull()
+    public void GetById_WhenEntityDoesNotExist_ShouldReturnNull()
     {
         // Arrange
-        var context = CreateContext();
+        using var context = CreateContext();
         var nonExistentId = 999;
 
         // Act
@@ -76,11 +76,16 @@ public class DataContextTests
     }
 
     [Fact]
-    public void Update_WhenEntityExists_MustUpdateEntity()
+    public void Update_WhenEntityExists_ShouldUpdateEntity()
     {
         // Arrange
-        var context = CreateContext();
+        using var context = CreateContext();
         var entity = context.GetAll<User>().First();
+
+        var originalSurname = entity.Surname;
+        var originalEmail = entity.Email;
+        var originalIsActive = entity.IsActive;
+        var originalDob = entity.DateOfBirth;
 
         entity.Forename = "Updated";
 
@@ -88,12 +93,16 @@ public class DataContextTests
         context.Update(entity);
 
         // Assert
+        // Detach to ensure we re-query from the store rather than returning the tracked instance
+        context.Entry(entity).State = EntityState.Detached;
         var updatedEntity = context.GetById<User>(entity.Id);
 
-        updatedEntity.Should().NotBeNull()
-            .And.BeEquivalentTo(entity, options => options.Excluding(e => e.Forename));
-
-        updatedEntity.Forename.Should().Be("Updated");
+        updatedEntity.Should().NotBeNull();
+        updatedEntity!.Forename.Should().Be("Updated");
+        updatedEntity.Surname.Should().Be(originalSurname);
+        updatedEntity.Email.Should().Be(originalEmail);
+        updatedEntity.IsActive.Should().Be(originalIsActive);
+        updatedEntity.DateOfBirth.Should().Be(originalDob);
     }
 
     private static DataContext CreateContext()
