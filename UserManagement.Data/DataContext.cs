@@ -62,6 +62,10 @@ public class DataContext : DbContext, IDataContext
         base.Remove(entity);
         SaveChanges();
     }
+
     public TEntity? GetById<TEntity>(long id) where TEntity : class
         => base.Set<TEntity>().Find(id);
+
+    public TEntity? GetByIdNoTracking<TEntity>(long id) where TEntity : class
+        => base.Set<TEntity>().AsNoTracking().FirstOrDefault(e => EF.Property<long>(e, "Id") == id);
 }

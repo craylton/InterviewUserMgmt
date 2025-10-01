@@ -13,4 +13,6 @@ public interface IDataContext
     void Delete<TEntity>(TEntity entity) where TEntity : class;
 
     TEntity? GetById<TEntity>(long id) where TEntity : class;
+
+    TEntity? GetByIdNoTracking<TEntity>(long id) where TEntity : class;
 }

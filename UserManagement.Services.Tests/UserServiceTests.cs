@@ -116,9 +116,8 @@ public sealed class UserServiceTests
             DateOfBirth = new DateTime(1985, 5, 15)
         };
 
-        // Setup GetAll to return the existing user for comparison
-        var users = new[] { existingUser }.AsQueryable();
-        _dataContext.Setup(s => s.GetAll<User>()).Returns(users);
+        // Setup GetByIdNoTracking to return the existing user for comparison
+        _dataContext.Setup(s => s.GetByIdNoTracking<User>(1L)).Returns(existingUser);
 
         // Act
         service.Update(updatedUser);

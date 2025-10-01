@@ -155,6 +155,62 @@ public sealed class ChangeLogServiceTests
         totalCount.Should().Be(3);
     }
 
+    [Theory]
+    [InlineData(0, 10)]
+    [InlineData(-1, 10)]
+    public void GetAll_WithInvalidPageNumber_ShouldThrowArgumentOutOfRangeException(int pageNumber, int pageSize)
+    {
+        // Arrange
+        var service = CreateService();
+
+        // Act & Assert
+        var action = () => service.GetAll(pageNumber, pageSize, out _);
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("pageNumber");
+    }
+
+    [Theory]
+    [InlineData(1, 0)]
+    [InlineData(1, -1)]
+    public void GetAll_WithInvalidPageSize_ShouldThrowArgumentOutOfRangeException(int pageNumber, int pageSize)
+    {
+        // Arrange
+        var service = CreateService();
+
+        // Act & Assert
+        var action = () => service.GetAll(pageNumber, pageSize, out _);
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("pageSize");
+    }
+
+    [Theory]
+    [InlineData(0, 10)]
+    [InlineData(-1, 10)]
+    public void GetByUser_WithInvalidPageNumber_ShouldThrowArgumentOutOfRangeException(int pageNumber, int pageSize)
+    {
+        // Arrange
+        var service = CreateService();
+
+        // Act & Assert
+        var action = () => service.GetByUser(1, pageNumber, pageSize, out _);
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("pageNumber");
+    }
+
+    [Theory]
+    [InlineData(1, 0)]
+    [InlineData(1, -1)]
+    public void GetByUser_WithInvalidPageSize_ShouldThrowArgumentOutOfRangeException(int pageNumber, int pageSize)
+    {
+        // Arrange
+        var service = CreateService();
+
+        // Act & Assert
+        var action = () => service.GetByUser(1, pageNumber, pageSize, out _);
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("pageSize");
+    }
+
     [Fact]
     public void GetByUser_WhenRetrievingLogsForSpecificUser_MustReturnOnlyUserLogs()
     {

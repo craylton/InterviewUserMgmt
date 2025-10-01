@@ -9,8 +9,6 @@ namespace UserManagement.Services.Implementations;
 
 public class ChangeLogService(IDataContext dataContext) : IChangeLogService
 {
-    private readonly IDataContext _dataContext = dataContext;
-
     public void LogAdd(User user)
     {
         try
@@ -23,7 +21,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                 Description = null
             };
 
-            _dataContext.Create(logEntry);
+            dataContext.Create(logEntry);
         }
         catch
         {
@@ -43,7 +41,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                 Description = null
             };
 
-            _dataContext.Create(logEntry);
+            dataContext.Create(logEntry);
         }
         catch
         {
@@ -66,7 +64,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                     Description = change
                 };
 
-                _dataContext.Create(logEntry);
+                dataContext.Create(logEntry);
             }
         }
         catch
@@ -77,48 +75,56 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
 
     public IEnumerable<ChangeLogEntry> GetAll(int pageNumber, int pageSize, out int totalCount)
     {
-        var query = _dataContext.GetAll<ChangeLogEntry>().OrderByDescending(x => x.Timestamp);
+        ValidatePagingParameters(pageNumber, pageSize);
+        
+        var query = dataContext.GetAll<ChangeLogEntry>().OrderByDescending(x => x.Timestamp);
         totalCount = query.Count();
 
-        return query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize);
+        return ApplyPaging(query, pageNumber, pageSize);
     }
 
     public IEnumerable<ChangeLogEntry> GetByUser(long userId, int pageNumber, int pageSize, out int totalCount)
     {
-        var query = _dataContext.GetAll<ChangeLogEntry>()
+        ValidatePagingParameters(pageNumber, pageSize);
+        
+        var query = dataContext.GetAll<ChangeLogEntry>()
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.Timestamp);
 
         totalCount = query.Count();
 
-        return query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize);
+        return ApplyPaging(query, pageNumber, pageSize);
     }
 
-    public ChangeLogEntry? GetById(long id) => _dataContext.GetById<ChangeLogEntry>(id);
+    public ChangeLogEntry? GetById(long id) => dataContext.GetById<ChangeLogEntry>(id);
 
-    private static List<string> GetChanges(User before, User after)
+    private static void ValidatePagingParameters(int pageNumber, int pageSize)
     {
-        var changes = new List<string>();
+        if (pageNumber < 1)
+            throw new ArgumentOutOfRangeException(nameof(pageNumber), pageNumber, "Page number must be greater than 0");
+        
+        if (pageSize <= 0)
+            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Page size must be greater than 0");
+    }
 
+    private static IEnumerable<TEntity> ApplyPaging<TEntity>(IQueryable<TEntity> query, int pageNumber, int pageSize)
+        => query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+    private static IEnumerable<string> GetChanges(User before, User after)
+    {
         if (before.Forename != after.Forename)
-            changes.Add($"Forename changed from {before.Forename} to {after.Forename}");
+            yield return $"Forename changed from {before.Forename} to {after.Forename}";
 
         if (before.Surname != after.Surname)
-            changes.Add($"Surname changed from {before.Surname} to {after.Surname}");
+            yield return $"Surname changed from {before.Surname} to {after.Surname}";
 
         if (before.Email != after.Email)
-            changes.Add($"Email changed from {before.Email} to {after.Email}");
+            yield return $"Email changed from {before.Email} to {after.Email}";
 
         if (before.IsActive != after.IsActive)
-            changes.Add($"IsActive changed from {before.IsActive} to {after.IsActive}");
+            yield return $"IsActive changed from {before.IsActive} to {after.IsActive}";
 
         if (before.DateOfBirth != after.DateOfBirth)
-            changes.Add($"DateOfBirth changed from {before.DateOfBirth:yyyy-MM-dd} to {after.DateOfBirth:yyyy-MM-dd}");
-
-        return changes;
+            yield return $"DateOfBirth changed from {before.DateOfBirth:yyyy-MM-dd} to {after.DateOfBirth:yyyy-MM-dd}";
     }
 }

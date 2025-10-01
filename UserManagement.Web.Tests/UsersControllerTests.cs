@@ -378,7 +378,7 @@ public sealed class UsersControllerTests
             u.DateOfBirth == user.DateOfBirth)), Times.Once);
     }
 
-    private User[] SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
+    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
     {
         var users = new[]
         {
@@ -391,7 +391,7 @@ public sealed class UsersControllerTests
                 IsActive = isActive,
                 DateOfBirth = new DateTime(1990, 1, 15)
             }
-        };
+        }.AsQueryable();
 
         _userService
             .Setup(s => s.GetAll())
