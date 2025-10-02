@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UserManagement.Data;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Implementations;
@@ -178,5 +179,6 @@ public sealed class UserServiceTests
 
     private readonly Mock<IDataContext> _dataContext = new();
     private readonly Mock<IChangeLogService> _changeLogService = new();
-    private UserService CreateService() => new(_dataContext.Object, _changeLogService.Object);
+    private readonly Mock<ILogger<UserService>> _logger = new();
+    private UserService CreateService() => new(_dataContext.Object, _changeLogService.Object, _logger.Object);
 }
