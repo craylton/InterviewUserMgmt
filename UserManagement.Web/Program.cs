@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using UserManagement.Data.Extensions;
 using UserManagement.Services.Extensions;
+using UserManagement.Web.Middleware;
 using Westwind.AspNetCore.Markdown;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,8 @@ builder.Services
     .AddControllersWithViews();
 
 var app = builder.Build();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseMarkdown();
 
