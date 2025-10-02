@@ -63,7 +63,7 @@ public sealed class UserServiceTests
     }
 
     [Fact]
-    public void GetById_ExistingUser_ReturnsUser()
+    public async Task GetById_ExistingUser_ReturnsUser()
     {
         // Arrange
         var service = CreateService();
@@ -71,7 +71,7 @@ public sealed class UserServiceTests
         _dataContext.Setup(s => s.GetByIdAsync<User>(1L)).ReturnsAsync(user);
 
         // Act
-        var result = service.GetByIdAsync(1);
+        var result = await service.GetByIdAsync(1);
 
         // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(user);
@@ -79,14 +79,14 @@ public sealed class UserServiceTests
     }
 
     [Fact]
-    public void GetById_NonExistentUser_ReturnsNull()
+    public async Task GetById_NonExistentUser_ReturnsNull()
     {
         // Arrange
         var service = CreateService();
         _dataContext.Setup(s => s.GetByIdAsync<User>(999L)).ReturnsAsync((User?)null);
 
         // Act
-        var result = service.GetByIdAsync(999);
+        var result = await service.GetByIdAsync(999);
 
         // Assert
         result.Should().BeNull();

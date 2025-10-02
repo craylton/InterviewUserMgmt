@@ -119,7 +119,7 @@ public sealed class UsersControllerTests
     }
 
     [Fact]
-    public void View_WhenUserNotFound_ReturnsNotFound()
+    public async Task View_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var controller = CreateController();
@@ -130,7 +130,7 @@ public sealed class UsersControllerTests
             .ReturnsAsync((User?)null);
 
         // Act
-        var result = controller.View(userId);
+        var result = await controller.ViewAsync(userId);
 
         // Assert
         result.Should().BeOfType<NotFoundResult>();
@@ -139,7 +139,7 @@ public sealed class UsersControllerTests
     }
 
     [Fact]
-    public void View_WhenUserExists_ReturnsViewWithUserDetailsViewModel()
+    public async Task View_WhenUserExists_ReturnsViewWithUserDetailsViewModel()
     {
         // Arrange
         var controller = CreateController();
@@ -162,14 +162,13 @@ public sealed class UsersControllerTests
             });
 
         // Act
-        var result = controller.View(user.Id);
+        var result = await controller.ViewAsync(user.Id);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
-        result.Model.Should().BeOfType<UserDetailsViewModel>();
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        var userDetailsViewModel = viewResult.Model.Should().BeOfType<UserDetailsViewModel>().Subject;
 
-        var model = (UserDetailsViewModel)result.Model!;
-        model.User.Should().BeEquivalentTo(new UserViewModel
+        userDetailsViewModel.User.Should().BeEquivalentTo(new UserViewModel
         {
             Id = user.Id,
             Forename = user.Forename,
@@ -179,8 +178,8 @@ public sealed class UsersControllerTests
             DateOfBirth = user.DateOfBirth
         });
 
-        model.Logs.Items.Should().HaveCount(1);
-        model.Logs.TotalCount.Should().Be(1);
+        userDetailsViewModel.Logs.Items.Should().HaveCount(1);
+        userDetailsViewModel.Logs.TotalCount.Should().Be(1);
 
         _userService.Verify(s => s.GetByIdAsync(user.Id), Times.Once);
         _changeLogService.Verify(s => s.GetByUser(user.Id, 1, 10, out It.Ref<int>.IsAny), Times.Once);

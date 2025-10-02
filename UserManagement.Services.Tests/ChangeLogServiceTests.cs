@@ -243,7 +243,7 @@ public sealed class ChangeLogServiceTests
     }
 
     [Fact]
-    public void GetById_WhenLogExists_MustReturnLog()
+    public async Task GetById_WhenLogExists_MustReturnLog()
     {
         // Arrange
         var service = CreateService();
@@ -258,7 +258,7 @@ public sealed class ChangeLogServiceTests
         _dataContext.Setup(s => s.GetByIdAsync<ChangeLogEntry>(1L)).ReturnsAsync(expectedLog);
 
         // Act
-        var result = service.GetByIdAsync(1);
+        var result = await service.GetByIdAsync(1);
 
         // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(expectedLog);
@@ -266,14 +266,14 @@ public sealed class ChangeLogServiceTests
     }
 
     [Fact]
-    public void GetById_WhenLogDoesNotExist_MustReturnNull()
+    public async Task GetById_WhenLogDoesNotExist_MustReturnNull()
     {
         // Arrange
         var service = CreateService();
         _dataContext.Setup(s => s.GetByIdAsync<ChangeLogEntry>(999L)).ReturnsAsync((ChangeLogEntry?)null);
 
         // Act
-        var result = service.GetByIdAsync(999);
+        var result = await service.GetByIdAsync(999);
 
         // Assert
         result.Should().BeNull();
