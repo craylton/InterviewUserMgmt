@@ -25,6 +25,8 @@ builder.Services
     .AddMarkdown()
     .AddControllersWithViews();
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseMarkdown();
@@ -37,5 +39,6 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapDefaultControllerRoute();
+app.MapHealthChecks("/health");
 
 app.Run();
