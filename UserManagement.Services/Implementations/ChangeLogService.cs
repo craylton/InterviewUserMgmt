@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UserManagement.Data;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Interfaces;
@@ -9,7 +10,7 @@ namespace UserManagement.Services.Implementations;
 
 public class ChangeLogService(IDataContext dataContext) : IChangeLogService
 {
-    public void LogAdd(User user)
+    public async Task LogAddAsync(User user)
     {
         try
         {
@@ -21,7 +22,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                 Description = null
             };
 
-            dataContext.Create(logEntry);
+            await dataContext.CreateAsync(logEntry);
         }
         catch
         {
@@ -29,7 +30,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
         }
     }
 
-    public void LogDelete(User user)
+    public async Task LogDeleteAsync(User user)
     {
         try
         {
@@ -41,7 +42,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                 Description = null
             };
 
-            dataContext.Create(logEntry);
+            await dataContext.CreateAsync(logEntry);
         }
         catch
         {
@@ -49,7 +50,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
         }
     }
 
-    public void LogUpdate(User before, User after)
+    public async Task LogUpdateAsync(User before, User after)
     {
         try
         {
@@ -64,7 +65,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                     Description = change
                 };
 
-                dataContext.Create(logEntry);
+                await dataContext.CreateAsync(logEntry);
             }
         }
         catch
@@ -76,7 +77,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
     public IEnumerable<ChangeLogEntry> GetAll(int pageNumber, int pageSize, out int totalCount)
     {
         ValidatePagingParameters(pageNumber, pageSize);
-        
+
         var query = dataContext.GetAll<ChangeLogEntry>().OrderByDescending(x => x.Timestamp);
         totalCount = query.Count();
 
@@ -86,7 +87,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
     public IEnumerable<ChangeLogEntry> GetByUser(long userId, int pageNumber, int pageSize, out int totalCount)
     {
         ValidatePagingParameters(pageNumber, pageSize);
-        
+
         var query = dataContext.GetAll<ChangeLogEntry>()
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.Timestamp);
@@ -96,13 +97,13 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
         return ApplyPaging(query, pageNumber, pageSize);
     }
 
-    public ChangeLogEntry? GetById(long id) => dataContext.GetById<ChangeLogEntry>(id);
+    public async Task<ChangeLogEntry?> GetByIdAsync(long id) => await dataContext.GetByIdAsync<ChangeLogEntry>(id);
 
     private static void ValidatePagingParameters(int pageNumber, int pageSize)
     {
         if (pageNumber < 1)
             throw new ArgumentOutOfRangeException(nameof(pageNumber), pageNumber, "Page number must be greater than 0");
-        
+
         if (pageSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Page size must be greater than 0");
     }

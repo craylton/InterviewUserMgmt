@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Data.Entities;
 
@@ -45,27 +46,27 @@ public class DataContext : DbContext, IDataContext
     public IQueryable<TEntity> GetAll<TEntity>() where TEntity : class
         => base.Set<TEntity>();
 
-    public void Create<TEntity>(TEntity entity) where TEntity : class
+    public async Task CreateAsync<TEntity>(TEntity entity) where TEntity : class
     {
-        base.Add(entity);
-        SaveChanges();
+        await base.AddAsync(entity);
+        await SaveChangesAsync();
     }
 
-    public void UpdateAndSave<TEntity>(TEntity entity) where TEntity : class
+    public async Task UpdateAndSaveAsync<TEntity>(TEntity entity) where TEntity : class
     {
         base.Update(entity);
-        SaveChanges();
+        await SaveChangesAsync();
     }
 
-    public void Delete<TEntity>(TEntity entity) where TEntity : class
+    public async Task DeleteAsync<TEntity>(TEntity entity) where TEntity : class
     {
         base.Remove(entity);
-        SaveChanges();
+        await SaveChangesAsync();
     }
 
-    public TEntity? GetById<TEntity>(long id) where TEntity : class
-        => base.Set<TEntity>().Find(id);
+    public async Task<TEntity?> GetByIdAsync<TEntity>(long id) where TEntity : class
+        => await base.Set<TEntity>().FindAsync(id);
 
-    public TEntity? GetByIdNoTracking<TEntity>(long id) where TEntity : class
-        => base.Set<TEntity>().AsNoTracking().FirstOrDefault(e => EF.Property<long>(e, "Id") == id);
+    public async Task<TEntity?> GetByIdNoTrackingAsync<TEntity>(long id) where TEntity : class
+        => await base.Set<TEntity>().AsNoTracking().FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
 }

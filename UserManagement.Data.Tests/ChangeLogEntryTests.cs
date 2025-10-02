@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Data.Entities;
 
@@ -7,7 +8,7 @@ namespace UserManagement.Data.Tests;
 public sealed class ChangeLogEntryTests
 {
     [Fact]
-    public void Create_WhenNewChangeLogEntry_ShouldAssignId()
+    public async Task Create_WhenNewChangeLogEntry_ShouldAssignId()
     {
         // Arrange
         using var context = CreateContext();
@@ -20,14 +21,14 @@ public sealed class ChangeLogEntryTests
         };
 
         // Act
-        context.Create(changeLogEntry);
+        await context.CreateAsync(changeLogEntry);
 
         // Assert
         changeLogEntry.Id.Should().BeGreaterThan(0);
     }
 
     [Fact]
-    public void GetAll_WhenChangeLogEntriesExist_ShouldReturnAllChangeLogEntries()
+    public async Task GetAll_WhenChangeLogEntriesExist_ShouldReturnAllChangeLogEntries()
     {
         // Arrange
         using var context = CreateContext();
@@ -44,8 +45,8 @@ public sealed class ChangeLogEntryTests
             Action = ChangeActionType.Update,
             Description = "Test update"
         };
-        context.Create(changeLogEntry1);
-        context.Create(changeLogEntry2);
+        await context.CreateAsync(changeLogEntry1);
+        await context.CreateAsync(changeLogEntry2);
 
         // Act
         var result = context.GetAll<ChangeLogEntry>();
@@ -55,7 +56,7 @@ public sealed class ChangeLogEntryTests
     }
 
     [Fact]
-    public void GetById_WhenChangeLogEntryExists_ShouldReturnChangeLogEntry()
+    public async Task GetById_WhenChangeLogEntryExists_ShouldReturnChangeLogEntry()
     {
         // Arrange
         using var context = CreateContext();
@@ -65,10 +66,10 @@ public sealed class ChangeLogEntryTests
             Timestamp = DateTime.UtcNow,
             Action = ChangeActionType.Delete
         };
-        context.Create(changeLogEntry);
+        await context.CreateAsync(changeLogEntry);
 
         // Act
-        var result = context.GetById<ChangeLogEntry>(changeLogEntry.Id);
+        var result = await context.GetByIdAsync<ChangeLogEntry>(changeLogEntry.Id);
 
         // Assert
         result.Should().NotBeNull();
@@ -78,20 +79,20 @@ public sealed class ChangeLogEntryTests
     }
 
     [Fact]
-    public void GetById_WhenChangeLogEntryDoesNotExist_ShouldReturnNull()
+    public async Task GetById_WhenChangeLogEntryDoesNotExist_ShouldReturnNull()
     {
         // Arrange
         using var context = CreateContext();
 
         // Act
-        var result = context.GetById<ChangeLogEntry>(999);
+        var result = await context.GetByIdAsync<ChangeLogEntry>(999);
 
         // Assert
         result.Should().BeNull();
     }
 
     [Fact]
-    public void Update_WhenChangeLogEntryExists_ShouldUpdateChangeLogEntry()
+    public async Task Update_WhenChangeLogEntryExists_ShouldUpdateChangeLogEntry()
     {
         // Arrange
         using var context = CreateContext();
@@ -102,20 +103,20 @@ public sealed class ChangeLogEntryTests
             Action = ChangeActionType.Add,
             Description = "Original description"
         };
-        context.Create(changeLogEntry);
+        await context.CreateAsync(changeLogEntry);
 
         // Act
         changeLogEntry.Description = "Updated description";
-        context.UpdateAndSave(changeLogEntry);
+        await context.UpdateAndSaveAsync(changeLogEntry);
 
         // Assert
-        var result = context.GetById<ChangeLogEntry>(changeLogEntry.Id);
+        var result = await context.GetByIdAsync<ChangeLogEntry>(changeLogEntry.Id);
         result.Should().NotBeNull();
         result!.Description.Should().Be("Updated description");
     }
 
     [Fact]
-    public void Delete_WhenChangeLogEntryExists_ShouldRemoveChangeLogEntry()
+    public async Task Delete_WhenChangeLogEntryExists_ShouldRemoveChangeLogEntry()
     {
         // Arrange
         using var context = CreateContext();
@@ -125,13 +126,13 @@ public sealed class ChangeLogEntryTests
             Timestamp = DateTime.UtcNow,
             Action = ChangeActionType.Add
         };
-        context.Create(changeLogEntry);
+        await context.CreateAsync(changeLogEntry);
 
         // Act
-        context.Delete(changeLogEntry);
+        await context.DeleteAsync(changeLogEntry);
 
         // Assert
-        var result = context.GetById<ChangeLogEntry>(changeLogEntry.Id);
+        var result = await context.GetByIdAsync<ChangeLogEntry>(changeLogEntry.Id);
         result.Should().BeNull();
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using UserManagement.Data;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Implementations;
@@ -9,7 +10,7 @@ namespace UserManagement.Services.Tests;
 public sealed class ChangeLogServiceTests
 {
     [Fact]
-    public void LogAdd_WhenLoggingUserAdd_MustCallDataContextCreate()
+    public async Task LogAdd_WhenLoggingUserAdd_MustCallDataContextCreate()
     {
         // Arrange
         var service = CreateService();
@@ -24,10 +25,10 @@ public sealed class ChangeLogServiceTests
         };
 
         // Act
-        service.LogAdd(user);
+        await service.LogAddAsync(user);
 
         // Assert
-        _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
+        _dataContext.Verify(s => s.CreateAsync(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == user.Id &&
             entry.Action == ChangeActionType.Add &&
             entry.Description == null &&
@@ -35,7 +36,7 @@ public sealed class ChangeLogServiceTests
     }
 
     [Fact]
-    public void LogDelete_WhenLoggingUserDelete_MustCallDataContextCreate()
+    public async Task LogDelete_WhenLoggingUserDelete_MustCallDataContextCreate()
     {
         // Arrange
         var service = CreateService();
@@ -50,10 +51,10 @@ public sealed class ChangeLogServiceTests
         };
 
         // Act
-        service.LogDelete(user);
+        await service.LogDeleteAsync(user);
 
         // Assert
-        _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
+        _dataContext.Verify(s => s.CreateAsync(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == user.Id &&
             entry.Action == ChangeActionType.Delete &&
             entry.Description == null &&
@@ -61,7 +62,7 @@ public sealed class ChangeLogServiceTests
     }
 
     [Fact]
-    public void LogUpdate_WhenLoggingUserUpdate_MustCallDataContextCreateForEachChange()
+    public async Task LogUpdate_WhenLoggingUserUpdate_MustCallDataContextCreateForEachChange()
     {
         // Arrange
         var service = CreateService();
@@ -85,18 +86,18 @@ public sealed class ChangeLogServiceTests
         };
 
         // Act
-        service.LogUpdate(beforeUser, afterUser);
+        await service.LogUpdateAsync(beforeUser, afterUser);
 
         // Assert
-        _dataContext.Verify(s => s.Create(It.IsAny<ChangeLogEntry>()), Times.Exactly(5));
+        _dataContext.Verify(s => s.CreateAsync(It.IsAny<ChangeLogEntry>()), Times.Exactly(5));
 
-        _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
+        _dataContext.Verify(s => s.CreateAsync(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == afterUser.Id &&
             entry.Action == ChangeActionType.Update &&
             entry.Description != null &&
             entry.Description.Contains("Forename changed from Original to Updated"))), Times.Once);
 
-        _dataContext.Verify(s => s.Create(It.Is<ChangeLogEntry>(entry =>
+        _dataContext.Verify(s => s.CreateAsync(It.Is<ChangeLogEntry>(entry =>
             entry.UserId == afterUser.Id &&
             entry.Action == ChangeActionType.Update &&
             entry.Description != null &&
@@ -104,7 +105,7 @@ public sealed class ChangeLogServiceTests
     }
 
     [Fact]
-    public void LogUpdate_WhenNoChanges_MustNotCallDataContextCreate()
+    public async Task LogUpdate_WhenNoChanges_MustNotCallDataContextCreate()
     {
         // Arrange
         var service = CreateService();
@@ -119,10 +120,10 @@ public sealed class ChangeLogServiceTests
         };
 
         // Act
-        service.LogUpdate(user, user);
+        await service.LogUpdateAsync(user, user);
 
         // Assert
-        _dataContext.Verify(s => s.Create(It.IsAny<ChangeLogEntry>()), Times.Never);
+        _dataContext.Verify(s => s.CreateAsync(It.IsAny<ChangeLogEntry>()), Times.Never);
     }
 
     [Fact]
@@ -166,7 +167,7 @@ public sealed class ChangeLogServiceTests
         // Act & Assert
         var action = () => service.GetAll(pageNumber, pageSize, out _);
         action.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("pageNumber");
+            .WithParameterName(nameof(pageNumber));
     }
 
     [Theory]
@@ -180,7 +181,7 @@ public sealed class ChangeLogServiceTests
         // Act & Assert
         var action = () => service.GetAll(pageNumber, pageSize, out _);
         action.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("pageSize");
+            .WithParameterName(nameof(pageSize));
     }
 
     [Theory]
@@ -194,7 +195,7 @@ public sealed class ChangeLogServiceTests
         // Act & Assert
         var action = () => service.GetByUser(1, pageNumber, pageSize, out _);
         action.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("pageNumber");
+            .WithParameterName(nameof(pageNumber));
     }
 
     [Theory]
@@ -208,7 +209,7 @@ public sealed class ChangeLogServiceTests
         // Act & Assert
         var action = () => service.GetByUser(1, pageNumber, pageSize, out _);
         action.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("pageSize");
+            .WithParameterName(nameof(pageSize));
     }
 
     [Fact]
@@ -254,14 +255,14 @@ public sealed class ChangeLogServiceTests
             Timestamp = DateTime.UtcNow,
             Description = null
         };
-        _dataContext.Setup(s => s.GetById<ChangeLogEntry>(1L)).Returns(expectedLog);
+        _dataContext.Setup(s => s.GetByIdAsync<ChangeLogEntry>(1L)).ReturnsAsync(expectedLog);
 
         // Act
-        var result = service.GetById(1);
+        var result = service.GetByIdAsync(1);
 
         // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(expectedLog);
-        _dataContext.Verify(s => s.GetById<ChangeLogEntry>(1L), Times.Once);
+        _dataContext.Verify(s => s.GetByIdAsync<ChangeLogEntry>(1L), Times.Once);
     }
 
     [Fact]
@@ -269,14 +270,14 @@ public sealed class ChangeLogServiceTests
     {
         // Arrange
         var service = CreateService();
-        _dataContext.Setup(s => s.GetById<ChangeLogEntry>(999L)).Returns((ChangeLogEntry?)null);
+        _dataContext.Setup(s => s.GetByIdAsync<ChangeLogEntry>(999L)).ReturnsAsync((ChangeLogEntry?)null);
 
         // Act
-        var result = service.GetById(999);
+        var result = service.GetByIdAsync(999);
 
         // Assert
         result.Should().BeNull();
-        _dataContext.Verify(s => s.GetById<ChangeLogEntry>(999L), Times.Once);
+        _dataContext.Verify(s => s.GetByIdAsync<ChangeLogEntry>(999L), Times.Once);
     }
 
     private IQueryable<ChangeLogEntry> SetupChangeLogEntries()

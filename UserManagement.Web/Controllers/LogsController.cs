@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using UserManagement.Services.Interfaces;
 using UserManagement.Web.Models.Logs;
 
@@ -34,9 +35,9 @@ public class LogsController(IChangeLogService changeLogService) : Controller
     }
 
     [HttpGet("{id}")]
-    public IActionResult View(long id, string? returnTo = null)
+    public async Task<IActionResult> ViewAsync(long id, string? returnTo = null)
     {
-        var log = changeLogService.GetById(id);
+        var log = await changeLogService.GetByIdAsync(id);
 
         if (log is null)
         {

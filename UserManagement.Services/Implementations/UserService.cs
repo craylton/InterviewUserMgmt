@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using UserManagement.Data;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Interfaces;
@@ -12,30 +13,30 @@ public class UserService(IDataContext dataAccess, IChangeLogService changeLogSer
 
     public IQueryable<User> GetAll() => dataAccess.GetAll<User>();
 
-    public void Create(User user)
+    public async Task CreateAsync(User user)
     {
-        dataAccess.Create(user);
-        changeLogService.LogAdd(user);
+        await dataAccess.CreateAsync(user);
+        await changeLogService.LogAddAsync(user);
     }
 
-    public User? GetById(long id) => dataAccess.GetById<User>(id);
+    public async Task<User?> GetByIdAsync(long id) => await dataAccess.GetByIdAsync<User>(id);
 
-    public void Update(User user)
+    public async Task UpdateAsync(User user)
     {
         // Get existing user for comparison without tracking to avoid conflicts
-        var existing = dataAccess.GetByIdNoTracking<User>(user.Id);
+        var existing = await dataAccess.GetByIdNoTrackingAsync<User>(user.Id);
 
-        dataAccess.UpdateAndSave(user);
+        await dataAccess.UpdateAndSaveAsync(user);
 
         if (existing is not null)
         {
-            changeLogService.LogUpdate(existing, user);
+            await changeLogService.LogUpdateAsync(existing, user);
         }
     }
 
-    public void Delete(User user)
+    public async Task DeleteAsync(User user)
     {
-        changeLogService.LogDelete(user);
-        dataAccess.Delete(user);
+        await changeLogService.LogDeleteAsync(user);
+        await dataAccess.DeleteAsync(user);
     }
 }
