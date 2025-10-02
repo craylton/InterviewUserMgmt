@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UserManagement.Data;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Interfaces;
 
 namespace UserManagement.Services.Implementations;
 
-public class ChangeLogService(IDataContext dataContext) : IChangeLogService
+public class ChangeLogService(IDataContext dataContext, ILogger<ChangeLogService> logger) : IChangeLogService
 {
     public async Task LogAddAsync(User user)
     {
@@ -24,9 +25,9 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
 
             await dataContext.CreateAsync(logEntry);
         }
-        catch
+        catch (Exception ex)
         {
-            // Swallow logging exceptions to not impact user operations
+            logger.LogError(ex, "Failed to log add operation for user {UserId}", user.Id);
         }
     }
 
@@ -44,9 +45,9 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
 
             await dataContext.CreateAsync(logEntry);
         }
-        catch
+        catch (Exception ex)
         {
-            // Swallow logging exceptions to not impact user operations
+            logger.LogError(ex, "Failed to log delete operation for user {UserId}", user.Id);
         }
     }
 
@@ -68,9 +69,9 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                 await dataContext.CreateAsync(logEntry);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Swallow logging exceptions to not impact user operations
+            logger.LogError(ex, "Failed to log update operation for user {UserId}", after.Id);
         }
     }
 
