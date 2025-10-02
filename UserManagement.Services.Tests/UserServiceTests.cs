@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UserManagement.Data;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Implementations;
@@ -40,7 +42,7 @@ public sealed class UserServiceTests
     }
 
     [Fact]
-    public void Create_WhenCreatingUser_ShouldCallDataContextCreate()
+    public async Task Create_WhenCreatingUser_ShouldCallDataContextCreate()
     {
         // Arrange
         var service = CreateService();
@@ -54,46 +56,46 @@ public sealed class UserServiceTests
         };
 
         // Act
-        service.Create(user);
+        await service.CreateAsync(user);
 
         // Assert
-        _dataContext.Verify(s => s.Create(user), Times.Once);
-        _changeLogService.Verify(s => s.LogAdd(user), Times.Once);
+        _dataContext.Verify(s => s.CreateAsync(user), Times.Once);
+        _changeLogService.Verify(s => s.LogAddAsync(user), Times.Once);
     }
 
     [Fact]
-    public void GetById_ExistingUser_ReturnsUser()
+    public async Task GetById_ExistingUser_ReturnsUser()
     {
         // Arrange
         var service = CreateService();
         var user = SetupUsers().First();
-        _dataContext.Setup(s => s.GetById<User>(1L)).Returns(user);
+        _dataContext.Setup(s => s.GetByIdAsync<User>(1L)).ReturnsAsync(user);
 
         // Act
-        var result = service.GetById(1);
+        var result = await service.GetByIdAsync(1);
 
         // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(user);
-        _dataContext.Verify(s => s.GetById<User>(1L), Times.Once);
+        _dataContext.Verify(s => s.GetByIdAsync<User>(1L), Times.Once);
     }
 
     [Fact]
-    public void GetById_NonExistentUser_ReturnsNull()
+    public async Task GetById_NonExistentUser_ReturnsNull()
     {
         // Arrange
         var service = CreateService();
-        _dataContext.Setup(s => s.GetById<User>(999L)).Returns((User?)null);
+        _dataContext.Setup(s => s.GetByIdAsync<User>(999L)).ReturnsAsync((User?)null);
 
         // Act
-        var result = service.GetById(999);
+        var result = await service.GetByIdAsync(999);
 
         // Assert
         result.Should().BeNull();
-        _dataContext.Verify(s => s.GetById<User>(999L), Times.Once);
+        _dataContext.Verify(s => s.GetByIdAsync<User>(999L), Times.Once);
     }
 
     [Fact]
-    public void Update_WhenUpdatingUser_ShouldCallDataContextUpdate()
+    public async Task Update_WhenUpdatingUser_ShouldCallDataContextUpdate()
     {
         // Arrange
         var service = CreateService();
@@ -117,29 +119,29 @@ public sealed class UserServiceTests
         };
 
         // Setup GetByIdNoTracking to return the existing user for comparison
-        _dataContext.Setup(s => s.GetByIdNoTracking<User>(1L)).Returns(existingUser);
+        _dataContext.Setup(s => s.GetByIdNoTrackingAsync<User>(1L)).ReturnsAsync(existingUser);
 
         // Act
-        service.Update(updatedUser);
+        await service.UpdateAsync(updatedUser);
 
         // Assert
-        _dataContext.Verify(s => s.UpdateAndSave(updatedUser), Times.Once);
-        _changeLogService.Verify(s => s.LogUpdate(existingUser, updatedUser), Times.Once);
+        _dataContext.Verify(s => s.UpdateAndSaveAsync(updatedUser), Times.Once);
+        _changeLogService.Verify(s => s.LogUpdateAsync(existingUser, updatedUser), Times.Once);
     }
 
     [Fact]
-    public void Delete_WhenDeletingUser_ShouldCallDataContextDelete()
+    public async Task Delete_WhenDeletingUser_ShouldCallDataContextDelete()
     {
         // Arrange
         var service = CreateService();
         var user = SetupUsers().First();
 
         // Act
-        service.Delete(user);
+        await service.DeleteAsync(user);
 
         // Assert
-        _changeLogService.Verify(s => s.LogDelete(user), Times.Once);
-        _dataContext.Verify(s => s.Delete(user), Times.Once);
+        _changeLogService.Verify(s => s.LogDeleteAsync(user), Times.Once);
+        _dataContext.Verify(s => s.DeleteAsync(user), Times.Once);
     }
 
     private IQueryable<User> SetupUsers()
@@ -169,13 +171,14 @@ public sealed class UserServiceTests
             .Returns(users);
 
         _dataContext
-            .Setup(s => s.GetById<User>(1L))
-            .Returns(users.First());
+            .Setup(s => s.GetByIdAsync<User>(1L))
+            .ReturnsAsync(users.First());
 
         return users;
     }
 
     private readonly Mock<IDataContext> _dataContext = new();
     private readonly Mock<IChangeLogService> _changeLogService = new();
-    private UserService CreateService() => new(_dataContext.Object, _changeLogService.Object);
+    private readonly Mock<ILogger<UserService>> _logger = new();
+    private UserService CreateService() => new(_dataContext.Object, _changeLogService.Object, _logger.Object);
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Data.Entities;
 
@@ -8,7 +9,7 @@ namespace UserManagement.Data.Tests;
 public sealed class UserTests
 {
     [Fact]
-    public void GetAll_WhenNewEntityAdded_ShouldIncludeNewEntity()
+    public async Task GetAll_WhenNewEntityAdded_ShouldIncludeNewEntity()
     {
         // Arrange
         using var context = CreateContext();
@@ -21,7 +22,7 @@ public sealed class UserTests
             IsActive = true,
             DateOfBirth = new DateTime(1990, 5, 10)
         };
-        context.Create(entity);
+        await context.CreateAsync(entity);
 
         // Act
         var result = context.GetAll<User>();
@@ -33,12 +34,12 @@ public sealed class UserTests
     }
 
     [Fact]
-    public void GetAll_WhenDeleted_ShouldNotIncludeDeletedEntity()
+    public async Task GetAll_WhenDeleted_ShouldNotIncludeDeletedEntity()
     {
         // Arrange
         using var context = CreateContext();
         var entity = context.GetAll<User>().First();
-        context.Delete(entity);
+        await context.DeleteAsync(entity);
 
         // Act
         var result = context.GetAll<User>();
@@ -48,35 +49,35 @@ public sealed class UserTests
     }
 
     [Fact]
-    public void GetById_WhenEntityExists_ShouldReturnEntity()
+    public async Task GetById_WhenEntityExists_ShouldReturnEntity()
     {
         // Arrange
         using var context = CreateContext();
         var entity = context.GetAll<User>().First();
 
         // Act
-        var result = context.GetById<User>(entity.Id);
+        var result = await context.GetByIdAsync<User>(entity.Id);
 
         // Assert
         result.Should().NotBeNull().And.BeEquivalentTo(entity);
     }
 
     [Fact]
-    public void GetById_WhenEntityDoesNotExist_ShouldReturnNull()
+    public async Task GetById_WhenEntityDoesNotExist_ShouldReturnNull()
     {
         // Arrange
         using var context = CreateContext();
         var nonExistentId = 999;
 
         // Act
-        var result = context.GetById<User>(nonExistentId);
+        var result = await context.GetByIdAsync<User>(nonExistentId);
 
         // Assert
         result.Should().BeNull();
     }
 
     [Fact]
-    public void Update_WhenEntityExists_ShouldUpdateEntity()
+    public async Task Update_WhenEntityExists_ShouldUpdateEntity()
     {
         // Arrange
         using var context = CreateContext();
@@ -90,12 +91,12 @@ public sealed class UserTests
         entity.Forename = "Updated";
 
         // Act
-        context.UpdateAndSave(entity);
+        await context.UpdateAndSaveAsync(entity);
 
         // Assert
         // Detach to ensure we re-query from the store rather than returning the tracked instance
         context.Entry(entity).State = EntityState.Detached;
-        var updatedEntity = context.GetById<User>(entity.Id);
+        var updatedEntity = await context.GetByIdAsync<User>(entity.Id);
 
         updatedEntity.Should().NotBeNull();
         updatedEntity!.Forename.Should().Be("Updated");

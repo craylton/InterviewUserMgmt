@@ -3,6 +3,7 @@ using UserManagement.Web.Models.Users;
 using UserManagement.Web.Models.Logs;
 using UserManagement.Services.Interfaces;
 using UserManagement.Data.Entities;
+using System.Threading.Tasks;
 
 namespace UserManagement.Web.Controllers;
 
@@ -38,7 +39,7 @@ public class UsersController(IUserService userService, IChangeLogService changeL
 
     [HttpPost("add")]
     [ValidateAntiForgeryToken]
-    public IActionResult Add(UserViewModel model)
+    public async Task<IActionResult> AddAsync(UserViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -54,14 +55,14 @@ public class UsersController(IUserService userService, IChangeLogService changeL
             DateOfBirth = model.DateOfBirth
         };
 
-        userService.Create(user);
+        await userService.CreateAsync(user);
         return RedirectToAction(nameof(List));
     }
 
     [HttpGet("{id}")]
-    public IActionResult View(long id, int page = 1)
+    public async Task<IActionResult> ViewAsync(long id, int page = 1)
     {
-        if (userService.GetById(id) is not User user)
+        if (await userService.GetByIdAsync(id) is not User user)
         {
             return NotFound();
         }
@@ -103,9 +104,9 @@ public class UsersController(IUserService userService, IChangeLogService changeL
     }
 
     [HttpGet("edit/{id}")]
-    public IActionResult Edit(long id)
+    public async Task<IActionResult> EditAsync(long id)
     {
-        if (userService.GetById(id) is not User user)
+        if (await userService.GetByIdAsync(id) is not User user)
         {
             return NotFound();
         }
@@ -125,7 +126,7 @@ public class UsersController(IUserService userService, IChangeLogService changeL
 
     [HttpPost("edit/{id}")]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(long id, UserViewModel model)
+    public async Task<IActionResult> EditAsync(long id, UserViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -142,14 +143,14 @@ public class UsersController(IUserService userService, IChangeLogService changeL
             DateOfBirth = model.DateOfBirth
         };
 
-        userService.Update(user);
+        await userService.UpdateAsync(user);
         return RedirectToAction(nameof(List));
     }
 
     [HttpGet("delete/{id}")]
-    public IActionResult Delete(long id)
+    public async Task<IActionResult> DeleteAsync(long id)
     {
-        if (userService.GetById(id) is not User user)
+        if (await userService.GetByIdAsync(id) is not User user)
         {
             return NotFound();
         }
@@ -169,14 +170,14 @@ public class UsersController(IUserService userService, IChangeLogService changeL
 
     [HttpPost("delete/{id}")]
     [ValidateAntiForgeryToken]
-    public IActionResult PostDelete(long id)
+    public async Task<IActionResult> PostDeleteAsync(long id)
     {
-        if (userService.GetById(id) is not User user)
+        if (await userService.GetByIdAsync(id) is not User user)
         {
             return NotFound();
         }
 
-        userService.Delete(user);
+        await userService.DeleteAsync(user);
         return RedirectToAction(nameof(List));
     }
 }

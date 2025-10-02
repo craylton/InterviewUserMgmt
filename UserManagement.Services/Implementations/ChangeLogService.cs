@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UserManagement.Data;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Interfaces;
 
 namespace UserManagement.Services.Implementations;
 
-public class ChangeLogService(IDataContext dataContext) : IChangeLogService
+public class ChangeLogService(IDataContext dataContext, ILogger<ChangeLogService> logger) : IChangeLogService
 {
-    public void LogAdd(User user)
+    public async Task LogAddAsync(User user)
     {
         try
         {
@@ -21,15 +23,15 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                 Description = null
             };
 
-            dataContext.Create(logEntry);
+            await dataContext.CreateAsync(logEntry);
         }
-        catch
+        catch (Exception ex)
         {
-            // Swallow logging exceptions to not impact user operations
+            logger.LogError(ex, "Failed to log add operation for user {UserId}", user.Id);
         }
     }
 
-    public void LogDelete(User user)
+    public async Task LogDeleteAsync(User user)
     {
         try
         {
@@ -41,15 +43,15 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                 Description = null
             };
 
-            dataContext.Create(logEntry);
+            await dataContext.CreateAsync(logEntry);
         }
-        catch
+        catch (Exception ex)
         {
-            // Swallow logging exceptions to not impact user operations
+            logger.LogError(ex, "Failed to log delete operation for user {UserId}", user.Id);
         }
     }
 
-    public void LogUpdate(User before, User after)
+    public async Task LogUpdateAsync(User before, User after)
     {
         try
         {
@@ -64,19 +66,19 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
                     Description = change
                 };
 
-                dataContext.Create(logEntry);
+                await dataContext.CreateAsync(logEntry);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Swallow logging exceptions to not impact user operations
+            logger.LogError(ex, "Failed to log update operation for user {UserId}", after.Id);
         }
     }
 
     public IEnumerable<ChangeLogEntry> GetAll(int pageNumber, int pageSize, out int totalCount)
     {
         ValidatePagingParameters(pageNumber, pageSize);
-        
+
         var query = dataContext.GetAll<ChangeLogEntry>().OrderByDescending(x => x.Timestamp);
         totalCount = query.Count();
 
@@ -86,7 +88,7 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
     public IEnumerable<ChangeLogEntry> GetByUser(long userId, int pageNumber, int pageSize, out int totalCount)
     {
         ValidatePagingParameters(pageNumber, pageSize);
-        
+
         var query = dataContext.GetAll<ChangeLogEntry>()
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.Timestamp);
@@ -96,13 +98,13 @@ public class ChangeLogService(IDataContext dataContext) : IChangeLogService
         return ApplyPaging(query, pageNumber, pageSize);
     }
 
-    public ChangeLogEntry? GetById(long id) => dataContext.GetById<ChangeLogEntry>(id);
+    public async Task<ChangeLogEntry?> GetByIdAsync(long id) => await dataContext.GetByIdAsync<ChangeLogEntry>(id);
 
     private static void ValidatePagingParameters(int pageNumber, int pageSize)
     {
         if (pageNumber < 1)
             throw new ArgumentOutOfRangeException(nameof(pageNumber), pageNumber, "Page number must be greater than 0");
-        
+
         if (pageSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Page size must be greater than 0");
     }

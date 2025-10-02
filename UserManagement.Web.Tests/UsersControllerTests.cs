@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Data.Entities;
 using UserManagement.Services.Interfaces;
@@ -62,7 +63,7 @@ public sealed class UsersControllerTests
     }
 
     [Fact]
-    public void Add_WhenValidModel_CreatesUserAndRedirectsToList()
+    public async Task Add_WhenValidModel_CreatesUserAndRedirectsToList()
     {
         // Arrange
         var controller = CreateController();
@@ -77,13 +78,13 @@ public sealed class UsersControllerTests
         };
 
         // Act
-        var result = controller.Add(userViewModel);
+        var result = await controller.AddAsync(userViewModel);
 
         // Assert
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
-        _userService.Verify(s => s.Create(It.Is<User>(u =>
+        _userService.Verify(s => s.CreateAsync(It.Is<User>(u =>
             u.Id == 0 &&
             u.Forename == userViewModel.Forename &&
             u.Surname == userViewModel.Surname &&
@@ -93,7 +94,7 @@ public sealed class UsersControllerTests
     }
 
     [Fact]
-    public void Add_WhenInvalidModel_ReturnsViewWithSameModel()
+    public async Task Add_WhenInvalidModel_ReturnsViewWithSameModel()
     {
         // Arrange
         var controller = CreateController();
@@ -108,37 +109,37 @@ public sealed class UsersControllerTests
         controller.ModelState.AddModelError("Email", "Invalid email address.");
 
         // Act
-        var result = controller.Add(userViewModel);
+        var result = await controller.AddAsync(userViewModel);
 
         // Assert
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeEquivalentTo(userViewModel);
 
-        _userService.Verify(s => s.Create(It.IsAny<User>()), Times.Never);
+        _userService.Verify(s => s.CreateAsync(It.IsAny<User>()), Times.Never);
     }
 
     [Fact]
-    public void View_WhenUserNotFound_ReturnsNotFound()
+    public async Task View_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var controller = CreateController();
         const long userId = 999;
 
         _userService
-            .Setup(s => s.GetById(userId))
-            .Returns((User?)null);
+            .Setup(s => s.GetByIdAsync(userId))
+            .ReturnsAsync((User?)null);
 
         // Act
-        var result = controller.View(userId);
+        var result = await controller.ViewAsync(userId);
 
         // Assert
         result.Should().BeOfType<NotFoundResult>();
 
-        _userService.Verify(s => s.GetById(userId), Times.Once);
+        _userService.Verify(s => s.GetByIdAsync(userId), Times.Once);
     }
 
     [Fact]
-    public void View_WhenUserExists_ReturnsViewWithUserDetailsViewModel()
+    public async Task View_WhenUserExists_ReturnsViewWithUserDetailsViewModel()
     {
         // Arrange
         var controller = CreateController();
@@ -149,8 +150,8 @@ public sealed class UsersControllerTests
         };
 
         _userService
-            .Setup(s => s.GetById(user.Id))
-            .Returns(user);
+            .Setup(s => s.GetByIdAsync(user.Id))
+            .ReturnsAsync(user);
 
         _changeLogService
             .Setup(s => s.GetByUser(user.Id, 1, 10, out It.Ref<int>.IsAny))
@@ -161,15 +162,13 @@ public sealed class UsersControllerTests
             });
 
         // Act
-        var result = controller.View(user.Id);
+        var result = await controller.ViewAsync(user.Id);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
-        var viewResult = (ViewResult)result;
-        viewResult.Model.Should().BeOfType<UserDetailsViewModel>();
+        var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+        var userDetailsViewModel = viewResult.Model.Should().BeOfType<UserDetailsViewModel>().Subject;
 
-        var model = (UserDetailsViewModel)viewResult.Model!;
-        model.User.Should().BeEquivalentTo(new UserViewModel
+        userDetailsViewModel.User.Should().BeEquivalentTo(new UserViewModel
         {
             Id = user.Id,
             Forename = user.Forename,
@@ -179,26 +178,26 @@ public sealed class UsersControllerTests
             DateOfBirth = user.DateOfBirth
         });
 
-        model.Logs.Items.Should().HaveCount(1);
-        model.Logs.TotalCount.Should().Be(1);
+        userDetailsViewModel.Logs.Items.Should().HaveCount(1);
+        userDetailsViewModel.Logs.TotalCount.Should().Be(1);
 
-        _userService.Verify(s => s.GetById(user.Id), Times.Once);
+        _userService.Verify(s => s.GetByIdAsync(user.Id), Times.Once);
         _changeLogService.Verify(s => s.GetByUser(user.Id, 1, 10, out It.Ref<int>.IsAny), Times.Once);
     }
 
     [Fact]
-    public void Edit_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
+    public async Task Edit_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
     {
         // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
 
         _userService
-            .Setup(s => s.GetById(user.Id))
-            .Returns(user);
+            .Setup(s => s.GetByIdAsync(user.Id))
+            .ReturnsAsync(user);
 
         // Act
-        var result = controller.Edit(user.Id);
+        var result = await controller.EditAsync(user.Id);
 
         // Assert
         result.Should().BeOfType<ViewResult>()
@@ -213,31 +212,31 @@ public sealed class UsersControllerTests
                 DateOfBirth = user.DateOfBirth
             });
 
-        _userService.Verify(s => s.GetById(user.Id), Times.Once);
+        _userService.Verify(s => s.GetByIdAsync(user.Id), Times.Once);
     }
 
     [Fact]
-    public void Edit_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
+    public async Task Edit_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var controller = CreateController();
         const long userId = 999;
 
         _userService
-            .Setup(s => s.GetById(userId))
-            .Returns((User?)null);
+            .Setup(s => s.GetByIdAsync(userId))
+            .ReturnsAsync((User?)null);
 
         // Act
-        var result = controller.Edit(userId);
+        var result = await controller.EditAsync(userId);
 
         // Assert
         result.Should().BeOfType<NotFoundResult>();
 
-        _userService.Verify(s => s.GetById(userId), Times.Once);
+        _userService.Verify(s => s.GetByIdAsync(userId), Times.Once);
     }
 
     [Fact]
-    public void Edit_WhenPostRequest_AndValidModel_UpdatesUserAndRedirectsToList()
+    public async Task Edit_WhenPostRequest_AndValidModel_UpdatesUserAndRedirectsToList()
     {
         // Arrange
         var controller = CreateController();
@@ -253,17 +252,17 @@ public sealed class UsersControllerTests
         };
 
         _userService
-            .Setup(s => s.GetById(existingUser.Id))
-            .Returns(existingUser);
+            .Setup(s => s.GetByIdAsync(existingUser.Id))
+            .ReturnsAsync(existingUser);
 
         // Act
-        var result = controller.Edit(existingUser.Id, userViewModel);
+        var result = await controller.EditAsync(existingUser.Id, userViewModel);
 
         // Assert
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
-        _userService.Verify(s => s.Update(It.Is<User>(u =>
+        _userService.Verify(s => s.UpdateAsync(It.Is<User>(u =>
             u.Id == existingUser.Id &&
             u.Forename == userViewModel.Forename &&
             u.Surname == userViewModel.Surname &&
@@ -273,7 +272,7 @@ public sealed class UsersControllerTests
     }
 
     [Fact]
-    public void Edit_WhenPostRequest_AndInvalidModel_ReturnsViewWithSameModel()
+    public async Task Edit_WhenPostRequest_AndInvalidModel_ReturnsViewWithSameModel()
     {
         // Arrange
         var controller = CreateController();
@@ -289,28 +288,28 @@ public sealed class UsersControllerTests
         controller.ModelState.AddModelError("Email", "Invalid email address.");
 
         // Act
-        var result = controller.Edit(userId, userViewModel);
+        var result = await controller.EditAsync(userId, userViewModel);
 
         // Assert
         result.Should().BeOfType<ViewResult>()
             .Which.Model.Should().BeEquivalentTo(userViewModel);
 
-        _userService.Verify(s => s.Update(It.IsAny<User>()), Times.Never);
+        _userService.Verify(s => s.UpdateAsync(It.IsAny<User>()), Times.Never);
     }
 
     [Fact]
-    public void Delete_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
+    public async Task Delete_WhenGetRequest_AndUserExists_ReturnsViewWithUserViewModel()
     {
         // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
 
         _userService
-            .Setup(s => s.GetById(user.Id))
-            .Returns(user);
+            .Setup(s => s.GetByIdAsync(user.Id))
+            .ReturnsAsync(user);
 
         // Act
-        var result = controller.Delete(user.Id);
+        var result = await controller.DeleteAsync(user.Id);
 
         // Assert
         result.Should().BeOfType<ViewResult>()
@@ -325,48 +324,48 @@ public sealed class UsersControllerTests
                 DateOfBirth = user.DateOfBirth
             });
 
-        _userService.Verify(s => s.GetById(user.Id), Times.Once);
+        _userService.Verify(s => s.GetByIdAsync(user.Id), Times.Once);
     }
 
     [Fact]
-    public void Delete_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
+    public async Task Delete_WhenGetRequest_AndUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var controller = CreateController();
         const long userId = 999;
 
         _userService
-            .Setup(s => s.GetById(userId))
-            .Returns((User?)null);
+            .Setup(s => s.GetByIdAsync(userId))
+            .ReturnsAsync((User?)null);
 
         // Act
-        var result = controller.Delete(userId);
+        var result = await controller.DeleteAsync(userId);
 
         // Assert
         result.Should().BeOfType<NotFoundResult>();
 
-        _userService.Verify(s => s.GetById(userId), Times.Once);
+        _userService.Verify(s => s.GetByIdAsync(userId), Times.Once);
     }
 
     [Fact]
-    public void Delete_WhenPostRequest_DeletesUserAndRedirectsToList()
+    public async Task Delete_WhenPostRequest_DeletesUserAndRedirectsToList()
     {
         // Arrange
         var controller = CreateController();
         var user = SetupUsers().First();
 
         _userService
-            .Setup(s => s.GetById(user.Id))
-            .Returns(user);
+            .Setup(s => s.GetByIdAsync(user.Id))
+            .ReturnsAsync(user);
 
         // Act
-        var result = controller.PostDelete(user.Id);
+        var result = await controller.PostDeleteAsync(user.Id);
 
         // Assert
         result.Should().BeOfType<RedirectToActionResult>()
             .Which.ActionName.Should().Be(nameof(UsersController.List));
 
-        _userService.Verify(s => s.Delete(It.Is<User>(u =>
+        _userService.Verify(s => s.DeleteAsync(It.Is<User>(u =>
             u.Id == user.Id &&
             u.Forename == user.Forename &&
             u.Surname == user.Surname &&
@@ -376,24 +375,24 @@ public sealed class UsersControllerTests
     }
 
     [Fact]
-    public void Delete_WhenPostRequest_AndUserNotFound_ReturnsNotFound()
+    public async Task Delete_WhenPostRequest_AndUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var controller = CreateController();
         const long userId = 999;
 
         _userService
-            .Setup(s => s.GetById(userId))
-            .Returns((User?)null);
+            .Setup(s => s.GetByIdAsync(userId))
+            .ReturnsAsync((User?)null);
 
         // Act
-        var result = controller.PostDelete(userId);
+        var result = await controller.PostDeleteAsync(userId);
 
         // Assert
         result.Should().BeOfType<NotFoundResult>();
 
-        _userService.Verify(s => s.GetById(userId), Times.Once);
-        _userService.Verify(s => s.Delete(It.IsAny<User>()), Times.Never);
+        _userService.Verify(s => s.GetByIdAsync(userId), Times.Once);
+        _userService.Verify(s => s.DeleteAsync(It.IsAny<User>()), Times.Never);
     }
 
     private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)

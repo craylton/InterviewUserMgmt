@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using UserManagement.Web.Models.Logs;
+using UserManagement.Data.Entities;
 using UserManagement.Services.Interfaces;
 using UserManagement.Web.Controllers;
-using UserManagement.Data.Entities;
+using UserManagement.Web.Models.Logs;
 
 namespace UserManagement.Web.Tests;
 
@@ -68,7 +69,7 @@ public sealed class LogsControllerTests
     }
 
     [Fact]
-    public void View_WhenLogExists_ShouldReturnViewWithLogDetailViewModel()
+    public async Task View_WhenLogExists_ShouldReturnViewWithLogDetailViewModel()
     {
         // Arrange
         var controller = CreateController();
@@ -81,10 +82,10 @@ public sealed class LogsControllerTests
             Description = "Test description"
         };
 
-        _changeLogService.Setup(s => s.GetById(1)).Returns(log);
+        _changeLogService.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(log);
 
         // Act
-        var result = controller.View(1, "/users/1");
+        var result = await controller.ViewAsync(1, "/users/1");
 
         // Assert
         result.Should().BeOfType<ViewResult>();
@@ -100,21 +101,21 @@ public sealed class LogsControllerTests
     }
 
     [Fact]
-    public void View_WhenLogDoesNotExist_ShouldReturnNotFound()
+    public async Task View_WhenLogDoesNotExist_ShouldReturnNotFound()
     {
         // Arrange
         var controller = CreateController();
-        _changeLogService.Setup(s => s.GetById(999)).Returns((ChangeLogEntry?)null);
+        _changeLogService.Setup(s => s.GetByIdAsync(999)).ReturnsAsync((ChangeLogEntry?)null);
 
         // Act
-        var result = controller.View(999);
+        var result = await controller.ViewAsync(999);
 
         // Assert
         result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]
-    public void View_WhenReturnToIsNull_ShouldSetReturnToAsNull()
+    public async Task View_WhenReturnToIsNull_ShouldSetReturnToAsNull()
     {
         // Arrange
         var controller = CreateController();
@@ -126,10 +127,10 @@ public sealed class LogsControllerTests
             Timestamp = DateTime.UtcNow
         };
 
-        _changeLogService.Setup(s => s.GetById(1)).Returns(log);
+        _changeLogService.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(log);
 
         // Act
-        var result = controller.View(1);
+        var result = await controller.ViewAsync(1);
 
         // Assert
         result.Should().BeOfType<ViewResult>();
